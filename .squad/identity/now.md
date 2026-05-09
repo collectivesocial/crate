@@ -1,26 +1,28 @@
 # Now — crate.social
 
-**Focus:** Scaffold review complete (2026-05-09). All five packages approved with 4 blocking fixes. P0 questions resolved. 3 simple fixes in-flight. Awaiting Brittany's GitHub Pages topology decision before commit + CI.
+**Focus:** Three-repo split complete (2026-05-09). crate, crate-web, crate-landing initialized with first commits. CI workflow added. Brittany ready to push when she chooses.
 
 **Status:**
-- ✅ All five top-level packages have working skeletons (`api/`, `web/`, `landing/`, `lexicons/`, `importers/`)
-- ✅ P0 questions resolved: backend mirror choice (open-social), OAuth scopes (write-only), Collective namespace (app.collectivesocial.*)
-- ✅ Mal's scaffold review complete: APPROVE WITH FIXES
-- ⏳ 3 blocking fixes in-flight (Kaylee port, Wash CORS, Zoe deps)
-- ⏳ 1 blocking decision pending (GH Pages topology — Brittany)
+- ✅ Three-repo split completed (Mal planning, Kaylee + Inara extraction, Wash cleanup)
+- ✅ crate-web/ and crate-landing/ repos initialized with `git init`, first commits
+- ✅ crate/ repo cleaned up, no web/ or landing/ directories, no legacy deploy workflows
+- ✅ CI workflow added: .github/workflows/test.yml (Node 22 pinned, per-package lint/build/test with --if-present)
+- ✅ Codegen strategy: manual per-repo + commit (lexgen:local scripts in crate-web/ and crate-landing/)
+- ✅ lexgen-local.sh verified by Simon (all 6 checks pass)
+- ⏳ P1 importer strategies accepted (auth: session-JSON v1; idempotency: local .import-state.json sidecar + PDS fallback)
 
-**Blocking issues to fix (before commit + CI):**
-1. **Dev port mismatch** (Kaylee) — Vite proxy: 3002 vs api: 3000. Pick one, be consistent.
-2. **CORS dev whitelist** (Wash) — Hardcoded port 5173 vs Vite: 5175. Update whitelist or use env var.
-3. **@atproto/api version** (Zoe) — importers/ ^0.13.35 vs api's ^0.18.3. Bump to ^0.18.3, run npm install.
-4. **GitHub Pages collision** (Brittany) — Both deploy-web.yml + deploy-landing.yml target same environment. Decide topology (A/B/C in `mal-scaffold-review.md`).
+**Repo State:**
+- `crate/` (main branch): Commit 36d9056 "split: extract web and landing to sibling repos; add CI" — first real commit after three-repo split
+- `crate-web/` (main branch): Commit 4685d29, NOT pushed. Ready for `gh repo create` when Brittany chooses.
+- `crate-landing/` (main branch): Commit 5ef1c0d, NOT pushed. Ready for `gh repo create` when Brittany chooses.
+
+**Known flags:**
+- Inara skipped eslint config in crate-landing/ (no existing eslint.config.* found, but eslint deps present). Can be added by Brittany later if desired.
+- Kaylee made proactive fix: pathSegmentsToKeep in 404.html corrected (0 → 1) for GH Pages subpath routing.
 
 **Next actions:**
-1. Kaylee: Fix port mismatch.
-2. Wash: Fix CORS mismatch.
-3. Zoe: Bump @atproto/api.
-4. Brittany: Decide GH Pages topology.
-5. Scribe: Once #4 decided, stage & commit all fixed files.
-6. CI work begins (Work Item #8).
+1. Brittany decides when to push three repos to GitHub.
+2. First real API work (Wash), OAuth flow, or start social.crate.note demo (Zettelkasten).
+3. No new Zoe code yet — P1 strategies guide future importer adapters.
 
-**Awaiting:** Brittany's decision, fixes to merge, then CI setup.
+**Awaiting:** Brittany's choice on what to build next.

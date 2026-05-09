@@ -58,3 +58,4 @@ Two options: (A) local sidecar `.import-state.json` keyed by content hash — fa
 ## Learnings
 
 - 2026-05-09: Bumped @atproto/api to ^0.18.3 and vitest to ^4.1.5 to match the rest of the repo.
+- 2026-05-09: P1 importer strategies accepted by Brittany — auth via session-JSON file from web app for v1; idempotency via local .import-state.json sidecar with PDS query fallback. No new Zoe code yet — these guide future adapter work.

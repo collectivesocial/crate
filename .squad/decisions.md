@@ -881,3 +881,240 @@ The `app.collectivesocial` namespace mirrors Bluesky's `app.bsky.*` pattern and 
 3. **`social.crate.note.link` backlink federation** — the demo requires the AppView to subscribe to the firehose and index incoming link records. Confirm with Wash that the indexer will track `social.crate.note.link` records across all DIDs, not just the authenticated user's.
 4. **`social.crate.making.project.coverImage` maxSize** — set to 2 MB matching sibling pattern. Fiber project photos can be larger; increase to 5 MB if needed.
 5. **`social.crate.illustration.image` SVG acceptance** — SVG is included but some ATProto clients may not handle it. Flag for Kaylee to confirm the web renderer handles SVGs safely.
+# ADR: Three-Repo Split — crate / crate-web / crate-landing
+
+**Date:** 2026-05-09
+**Author:** Mal (Lead / Architect)
+**Status:** Proposed
+
+---
+
+## Decision
+
+Split `crate` into three independent repositories:
+
+| Repo | Contents | Deploy target |
+|------|----------|---------------|
+| `crate/` (this repo) | `lexicons/`, `api/`, `importers/`, root config | Collective server |
+| `crate-web/` (new) | React/Vite/Chakra SPA | GitHub Pages |
+| `crate-landing/` (new) | Astro static site | GitHub Pages |
+
+Extract **now** — before first functional commit — so no history rewriting is needed. Each new repo gets `git init` locally; `gh repo create` happens later at Brittany's discretion.
+
+---
+
+## Rationale
+
+1. **GitHub Pages limitation:** One Pages site per repo. The current monorepo has two static sites (`web/`, `landing/`) competing for the same `github-pages` environment. This was already flagged as a blocking issue during scaffold review.
+2. **Deploy-separately directive:** Brittany's deployment topology (decision 2026-05-09) says each project deploys independently. Separate repos make that the default, not something enforced by workflow path filters.
+3. **Sibling repo convention:** Every other project in the Collective ecosystem (`collective-social-api`, `collective-social-web`, `open-social`, `open-social-web`, etc.) is a standalone repo. This split aligns crate with that pattern.
+4. **Timing:** Extracting before first functional commit means zero history complexity — it's a clean copy, not a `git filter-repo` operation.
+
+---
+
+## Codegen Strategy
+
+**Choice: Manual codegen + commit (option a).**
+
+Each new repo has a `lexgen:local` npm script that:
+- Reads lexicon JSON from `../crate/lexicons/social/crate/`
+- Runs `@atproto/lex-cli gen-api` to produce `src/lexicon/`
+- Commits the generated output to the repo
+
+The `crate/` repo's `codegen.sh` drops the `web/src/lexicon/` target (web is no longer local). API and importers targets remain.
+
+**Why manual codegen + commit:**
+- Simplest to implement. No npm package publishing pipeline needed.
+- Generated code is version-controlled, so builds are hermetic (no cross-repo fetch at build time).
+- Matches the existing pattern in sibling repos where codegen output lives in-tree.
+
+**Tradeoff accepted:** When a lexicon schema changes, the developer must run `lexgen` in `crate/`, then run `lexgen:local` in `crate-web/` and commit the result. This is manual but infrequent — lexicon schemas change rarely after initial design, and the friction is a useful forcing function to think about backward compatibility.
+
+**Future option:** If sync burden becomes annoying, publish `@crate/lexicon` as an npm package. The codegen output is already self-contained, so this is additive — no architecture change required.
+
+---
+
+## What Changes in `crate/`
+
+1. **Deleted:** `web/`, `landing/`, `.github/workflows/deploy-web.yml`, `.github/workflows/deploy-landing.yml`
+2. **Root `package.json`:** Remove `dev:web`, `dev:landing`, `build:web`, `build:landing` scripts. Remove `web` and `landing` from `test` script.
+3. **`lexicons/scripts/codegen.sh`:** Remove the `WEB_LEXICON` target and its `gen-api → web/src/lexicon/` step. Keep `API_LEXICON` and `IMPORTERS_LEXICON`.
+# Decision: crate-landing Extraction — Inara Notes
+
+**Date:** 2026-05-09
+**Author:** Inara (Landing Site owner)
+**Status:** Done
+
+---
+
+## Summary
+
+Extracted `crate/landing/` into `/Users/brittanyellich/Documents/Code/Collective/crate-landing/` per Mal's three-repo split ADR (`mal-three-repo-split.md`).
+
+---
+
+## Deviations from Mal's Plan
+
+### 1. `lint` script NOT added to `package.json`
+
+**Mal's instruction:** Add `"lint": "eslint ."` only if eslint is in devDeps AND there is an eslint config file.
+
+**Outcome:** ESLint (`eslint@^9.22.0`, `eslint-plugin-astro@^1.3.1`) IS in devDependencies, but no eslint config file exists in `landing/` (`eslint.config.*`, `.eslintrc.*` — none found). Per the conditional, lint script was skipped.
+
+**Flag for Brittany:** If you want ESLint wired up, add `eslint.config.mjs` to `crate-landing/` and add `"lint": "eslint ."` to `package.json` at that time.
+
+### 2. No other deviations
+
+- `astro.config.mjs`: `site` changed to `https://brittanyellich.github.io`, `base` added as `/crate-landing`. ✅
+- `.github/workflows/deploy.yml`: Created with full build + deploy jobs. ✅
+- `README.md`: Created with setup, deploy, and custom domain instructions. ✅
+- `.gitignore`: Copied from source. ✅
+- `git init -b main` + initial commit done. Hash: `5ef1c0d`. ✅
+- `gh repo create` NOT called. ✅
+- `crate/landing/` NOT deleted. ✅
+- `crate-web/` NOT touched. ✅
+
+---
+
+## File Count
+
+10 files committed:
+- `.github/workflows/deploy.yml`
+- `.gitignore`
+- `README.md`
+- `astro.config.mjs`
+- `package.json`
+- `public/favicon.svg`
+- `src/components/.gitkeep`
+- `src/layouts/Base.astro`
+- `src/pages/index.astro`
+- `tsconfig.json`
+# Decision: crate-web Extraction
+
+**Date:** 2026-05-09
+**Author:** Kaylee (Web App agent)
+**Status:** Done
+**Triggered by:** mal-three-repo-split.md
+
+---
+
+## Source and Destination
+
+| | Path |
+|-|------|
+| Source | `/Users/brittanyellich/Documents/Code/Collective/crate/web/` |
+| Destination | `/Users/brittanyellich/Documents/Code/Collective/crate-web/` |
+
+Copied via `rsync -a --exclude node_modules`. Source untouched — Wash handles `crate/` cleanup.
+
+---
+
+## Key Edits Applied
+
+### `package.json`
+- Removed `"lexgen"` stub script
+- Added `"lexgen:local": "bash ./scripts/lexgen-local.sh"`
+- Added `"@atproto/lex-cli": "^0.9.7"` to `devDependencies`
+
+**lex-cli version pinned:** `^0.9.7` — matched from `crate/lexicons/package.json`
+
+### `.env.example`
+- Changed `VITE_BASE_PATH=/` → `VITE_BASE_PATH=/crate-web/`
+- `VITE_API_URL` unchanged
+
+### `public/404.html`
+- Changed `pathSegmentsToKeep` from `0` → `1`
+- **Deviation from Mal's plan:** Mal noted "404.html is fine — no postbuild copy needed", which is correct about the copy. However, the original value `0` was set for a custom domain (crate.social). Since crate-web deploys to `brittanyellich.github.io/crate-web`, the correct value is `1` to preserve the `/crate-web` path prefix during SPA redirects. Fixed proactively.
+
+---
+
+## New Files Created
+
+| File | Purpose |
+|------|---------|
+| `scripts/lexgen-local.sh` | Sibling-repo codegen — reads `../crate/lexicons/social/crate/*.json`, runs `lex-cli gen-api`, writes to `src/lexicon/`. Errors clearly if crate not cloned as sibling. |
+| `.github/workflows/deploy.yml` | GH Pages deploy on push to main. `VITE_BASE_PATH` defaults to `/crate-web/`, `VITE_API_URL` defaults to `https://api.crate.social`. Both overridable via repo vars. |
+| `README.md` | Setup, lexgen:local workflow, deploy notes. |
+
+---
+
+## SPA Routing
+
+Uses spa-github-pages redirect trick in `public/404.html` (already present in `crate/web/`). No `postbuild` copy script needed — the redirect approach handles all deep-link navigation correctly.
+
+---
+
+## Git State
+
+- `git init -b main` + initial commit in `crate-web/`
+- Commit hash: `4685d29`
+- 26 files, 6058 insertions
+- NOT pushed — Brittany decides when to `gh repo create` and push.
+
+---
+
+## Base Path Default
+
+`/crate-web/` is the default in both `.env.example` and the deploy workflow. If Brittany sets up a custom domain, override `VITE_BASE_PATH` to `/` via the `VITE_BASE_PATH` repo variable.
+
+---
+
+## Deviations from Mal's Plan
+
+1. **`public/404.html` `pathSegmentsToKeep`:** Updated `0` → `1` (see above). Mal's plan didn't flag this; it's a correctness fix.
+2. All other steps followed exactly.
+# ADR: crate Cleanup & CI (Work Item #8)
+
+**Date:** 2026-05-09
+**Author:** Wash (Backend / API)
+**Status:** Done
+
+---
+
+## What Was Removed
+
+| Item | Reason |
+|------|--------|
+| `web/` directory | Extracted to `crate-web` repo by Kaylee (commit 4685d29) |
+| `landing/` directory | Extracted to `crate-landing` repo by Inara (commit 5ef1c0d) |
+| `.github/workflows/deploy-web.yml` | No longer needed; web deploys from `crate-web` |
+| `.github/workflows/deploy-landing.yml` | No longer needed; landing deploys from `crate-landing` |
+| Root scripts: `dev:web`, `dev:landing`, `build:web`, `build:landing` | Packages are gone |
+| `test` script web portion (`npm --prefix web test`) | Package is gone |
+| `WEB_LEXICON` target in `codegen.sh` | `web/src/lexicon/` no longer exists in this repo |
+
+---
+
+## CI Workflow Approach
+
+**File:** `.github/workflows/test.yml`
+**Trigger:** `push` to main, `pull_request` against main
+**Runner:** `ubuntu-latest`
+**Node version:** 22 (pinned, no matrix)
+
+**Single job** (not matrix): `collective-social-api` uses a node-version matrix (20.x + 22.x) but crate pins Node 22 by policy, so a matrix would only verify the one version we care about — no value. `open-social` uses a single job, which was the closer structural match.
+
+**Step shape:**
+1. `actions/checkout@v4`
+2. `actions/setup-node@v4` with `node-version: '22'` and `cache: 'npm'`
+3. `npm ci` at root (installs prettier)
+4. `npm run format:check` (root prettier — catches all packages)
+5. Per package (api, importers, lexicons): `npm ci --prefix <pkg>`
+6. For api + importers: lint, build/typecheck, test — all `--if-present` so missing scripts don't fail CI
+7. `lexicons/` gets only `npm ci` — no test or codegen step (codegen is dev-time; generated output is committed)
+
+**`--if-present` rationale:** The repo is early stage. Most script slots will be filled incrementally. Forgiving CI means the workflow stays green during that growth phase; the team tightens scripts as they're added.
+
+**Action versions mirrored from siblings:** `actions/checkout@v4`, `actions/setup-node@v4` — same as both `collective-social-api` and `open-social`.
+
+---
+
+## Non-Obvious Calls
+
+1. **No codegen in CI.** `lexgen` (`codegen.sh`) requires `@atproto/lex-cli` from `lexicons/node_modules` and reads JSON from `lexicons/social/crate/`. Running it in CI would require `npm ci --prefix lexicons` to install lex-cli and the lexicon JSON to already be present (they are). However, the generated output (`api/src/lexicon/`, `importers/src/lexicon/`) is committed — builds are hermetic by design (Mal's decision in `mal-three-repo-split.md`). Adding a codegen verification step is deferred until there's a clear drift-detection need.
+
+2. **`lexicons/` only gets `npm ci`.** There are no test or lint scripts in `lexicons/package.json`. Installing is still worth doing to surface broken lock files or missing dependencies before a developer hits them locally.
+
+3. **Root `npm ci` before `format:check`.** Prettier is a root devDependency, so the root install must precede the format check. Package-level installs happen after.
+
+4. **`npm run build --if-present` for type-check.** `api/` has a `build` script (`tsc`), which type-checks as a side effect of compilation. There's no separate `typecheck` script in api/. `importers/` has a dedicated `typecheck` script (`tsc --noEmit`), so both are covered.
