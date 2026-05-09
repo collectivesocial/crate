@@ -38,3 +38,4 @@
 ## Learnings
 
 - 2026-05-09: Mal proposed initial scaffold (see decisions.md, decisions 1–6). Your work items: #3 — CI/CD workflows & GitHub Actions; #8 — Docker & production deployment.
+- 2026-05-09: Lexicons exist at `lexicons/social/crate/` (9 records: rss.feed, podcast.episode, making.project, making.update, talk, illustration, note, note.link, now). Root configs + git init done. See `.squad/decisions.md` for deploy topology and OAuth scope directives — read before your scaffold work. Simon flagged 3 open questions (see `.squad/orchestration-log/2026-05-09T10-26-27-simon-item-1.md`).

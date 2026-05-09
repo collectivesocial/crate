@@ -37,3 +37,4 @@
 
 ## Learnings
 
+- 2026-05-09: First scribe pass — merged 5 inbox decisions into decisions.md, wrote orchestration logs for Wash (#7) and Simon (#1), wrote session log, appended cross-agent learnings to Kaylee/Inara/Zoe history. Deleted inbox. Ready to commit.
