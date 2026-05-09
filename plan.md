@@ -17,7 +17,7 @@ Things I have not verified and you should check:
 
 - Whether Offprint uses `pub.leaflet.*` or `site.standard.*` (or both) as its primary lexicons. The Leaflet announcement suggests Leaflet has migrated toward standard.site, but confirm before you commit your newsletter migration to a destination lexicon.
 - Whether Semble publishes ATProto records you can reference, or is a closed bookmarking service. If the former, your note → bookmark links can be ATProto references; if the latter, they'll be plain URLs.
-- Whether Collective's books are at `app.collective.book`, `app.collectivesocial.book`, or some other NSID — check your own Collective app's lexicon before wiring up note-to-book links.
+- ~~Whether Collective's books are at `app.collective.book`, `app.collectivesocial.book`, or some other NSID~~ **VERIFIED:** Collective uses the `app.collectivesocial.*` namespace (not `app.collective.*`). See footnote [1] below.
 
 ---
 
@@ -53,8 +53,18 @@ External lexicons Crate reads from or links to:
 | `site.standard.publication` | The publication metadata for your blog/newsletter |
 | `community.lexicon.calendar.event` | Events on the network |
 | `community.lexicon.calendar.rsvp` | Your RSVPs (verify exact NSID) |
-| `app.collective.*` (verify) | Books from Collective |
+| `app.collectivesocial.list`[1] | Shared lists (including book clubs) in Collective |
+| `app.collectivesocial.listitem`[1] | Items in Collective lists |
 | `app.bsky.feed.post` | Bluesky posts |
+
+---
+
+## Footnotes
+
+[1] **Verified Collective NSIDs (2026-05-09):** The Collective app uses the `app.collectivesocial.*` namespace (NOT `app.collective.*`). Complete catalog verified from `/Users/brittanyellich/Documents/Code/Collective/collective-social-api/lexicons/`:
+  - **Books/Lists:** `app.collectivesocial.list` (has `purpose: "book-club"`) and `app.collectivesocial.listitem`
+  - Other record types: `app.collectivesocial.group.list`, `app.collectivesocial.feed.list`, `app.collectivesocial.feed.review`, and 16+ related types (feed comments, completions, goals, reactions, progress tracking, etc.)
+  - Note: `social.crate.note.link`'s flat `target` object (with optional `atUri` or `externalUrl`) can safely reference Collective list records via AT-URI when needed; no schema changes required.
 
 ---
 

@@ -41,6 +41,10 @@
 
 - 2026-05-09: Mal review approved landing/ scaffold structure. GH Pages workflow flagged for collision with web/ — Brittany deciding deploy split. No blocking issues for landing/ itself; await Brittany's topology decision on the Pages collision before proceeding with deploy workflow fixes. See `mal-scaffold-review.md` issue #4 for the three topology options (A: landing on Pages + web elsewhere; B: shared Pages with subdirs; C: subdomain prefixes).
 
+## Learnings
+
+2026-05-09: Extraction of `landing/` into standalone `crate-landing/` repo completed cleanly via rsync (10 files, no node_modules). GH Pages `base` path defaults to `/crate-landing` in `astro.config.mjs`; `site` set to `brittanyellich.github.io`. Custom domain users are instructed in README.md to set `site` to their domain and remove `base`. No `lint` script was added because there is no eslint config file in the landing directory (eslint is in devDeps but unconfigured). `gh repo create` was intentionally deferred to Brittany.
+
 ## Work Item #4: Landing Scaffold (2026-05-09)
 
 **Completed:** Full scaffolding of `landing/` directory.

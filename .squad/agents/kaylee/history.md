@@ -41,6 +41,10 @@
 - 2026-05-09: Lexicons exist at `lexicons/social/crate/` (9 records: rss.feed, podcast.episode, making.project, making.update, talk, illustration, note, note.link, now). Root configs + git init done. See `.squad/decisions.md` for deploy topology and OAuth scope directives — read before your scaffold work. Simon flagged 3 open questions (see `.squad/orchestration-log/2026-05-09T10-26-27-simon-item-1.md`).
 - 2026-05-09: Aligned vite dev proxy with api default port (3000).
 
+## Learnings — crate-web extraction (2026-05-09)
+
+Extracted `crate/web/` into the standalone sibling repo `/Users/brittanyellich/Documents/Code/Collective/crate-web/` per Mal's three-repo split ADR. The lexgen strategy is `lexgen:local` — a bash script (`scripts/lexgen-local.sh`) that reads JSON from `../crate/lexicons/social/crate/` at dev time, runs `npx @atproto/lex-cli gen-api`, and writes to `src/lexicon/`; generated files are committed so builds are hermetic. The GH Pages deploy workflow defaults `VITE_BASE_PATH` to `/crate-web/` (overridable via repo variable); the spa-github-pages `public/404.html` was updated to `pathSegmentsToKeep = 1` to match the new subdirectory path — this was a necessary deviation from the original `crate/web/` value of `0` (which was for a custom domain). Original `crate/web/` is untouched; Wash handles that cleanup.
+
 ## Learnings — web/ scaffold (2026-05-09)
 
 ### Chakra v3 setup pattern (from collective-social-web + open-social-web)

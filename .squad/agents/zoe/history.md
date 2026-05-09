@@ -54,3 +54,7 @@ Two options: (A) local sidecar `.import-state.json` keyed by content hash — fa
 
 **api/ vs importers/ split rationale.**
 `importers/` is for one-time CLI imports (manual runs, bulk backfills). Continuous background polling (RSS every N minutes) lives in `api/workers/` (Wash's territory). Adapter logic (parsing RSS/markdown) may eventually be shared — but execution context differs fundamentally: CLI process vs. long-running server worker. Shared adapter code should wait until both sides exist.
+
+## Learnings
+
+- 2026-05-09: Bumped @atproto/api to ^0.18.3 and vitest to ^4.1.5 to match the rest of the repo.

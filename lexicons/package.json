@@ -1,0 +1,12 @@
+{
+  "name": "crate-lexicons",
+  "version": "0.0.0",
+  "private": true,
+  "description": "social.crate.* ATProto lexicon definitions — codegen source only",
+  "engines": {
+    "node": ">=22"
+  },
+  "devDependencies": {
+    "@atproto/lex-cli": "^0.9.7"
+  }
+}
