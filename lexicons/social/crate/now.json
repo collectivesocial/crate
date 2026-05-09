@@ -1,0 +1,28 @@
+{
+  "lexicon": 1,
+  "id": "social.crate.now",
+  "defs": {
+    "main": {
+      "type": "record",
+      "description": "A 'now' page entry describing what the author is currently focused on. Append-only stream — the most recent record by createdAt is the current now page.",
+      "key": "tid",
+      "record": {
+        "type": "object",
+        "required": ["body", "createdAt"],
+        "properties": {
+          "body": {
+            "type": "string",
+            "maxGraphemes": 10000,
+            "maxLength": 100000,
+            "description": "Now page content in markdown. Describes what the author is currently doing, making, reading, or focused on."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "datetime",
+            "description": "Timestamp when this now entry was written. The latest by this field is the current now page."
+          }
+        }
+      }
+    }
+  }
+}

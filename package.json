@@ -1,0 +1,23 @@
+{
+  "name": "crate",
+  "version": "0.0.0",
+  "private": true,
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev:api": "npm --prefix api run dev",
+    "dev:web": "npm --prefix web run dev",
+    "dev:landing": "npm --prefix landing run dev",
+    "build:api": "npm --prefix api run build",
+    "build:web": "npm --prefix web run build",
+    "build:landing": "npm --prefix landing run build",
+    "test": "npm --prefix api test && npm --prefix web test && npm --prefix importers test",
+    "lexgen": "./lexicons/scripts/codegen.sh",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "prettier": "^3.0.0"
+  }
+}

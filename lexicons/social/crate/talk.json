@@ -1,0 +1,82 @@
+{
+  "lexicon": 1,
+  "id": "social.crate.talk",
+  "defs": {
+    "main": {
+      "type": "record",
+      "description": "A conference talk or presentation.",
+      "key": "tid",
+      "record": {
+        "type": "object",
+        "required": ["title", "eventName", "givenAt", "createdAt"],
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxGraphemes": 300,
+            "maxLength": 3000,
+            "description": "Talk title."
+          },
+          "abstract": {
+            "type": "string",
+            "maxGraphemes": 5000,
+            "maxLength": 50000,
+            "description": "Talk abstract or description in markdown."
+          },
+          "eventName": {
+            "type": "string",
+            "maxGraphemes": 300,
+            "maxLength": 3000,
+            "description": "Name of the conference or event where the talk was given."
+          },
+          "eventRef": {
+            "type": "string",
+            "format": "at-uri",
+            "description": "AT-URI of the community.lexicon.calendar.event record for this event, if known."
+          },
+          "givenAt": {
+            "type": "string",
+            "format": "datetime",
+            "description": "Date and time the talk was given."
+          },
+          "slidesUrl": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL of the slide deck."
+          },
+          "videoUrl": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL of the recorded talk video."
+          },
+          "coPresenters": {
+            "type": "array",
+            "description": "Co-presenters of the talk.",
+            "maxLength": 20,
+            "items": {
+              "type": "object",
+              "required": ["name"],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "maxGraphemes": 200,
+                  "maxLength": 2000,
+                  "description": "Co-presenter's display name."
+                },
+                "did": {
+                  "type": "string",
+                  "format": "did",
+                  "description": "Co-presenter's ATProto DID, if known."
+                }
+              }
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "datetime",
+            "description": "Timestamp when this record was created."
+          }
+        }
+      }
+    }
+  }
+}

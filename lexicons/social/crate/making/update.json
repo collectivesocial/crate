@@ -1,0 +1,43 @@
+{
+  "lexicon": 1,
+  "id": "social.crate.making.update",
+  "defs": {
+    "main": {
+      "type": "record",
+      "description": "A progress update or journal entry attached to a making project.",
+      "key": "tid",
+      "record": {
+        "type": "object",
+        "required": ["project", "body", "createdAt"],
+        "properties": {
+          "project": {
+            "type": "string",
+            "format": "at-uri",
+            "description": "AT-URI of the social.crate.making.project this update belongs to."
+          },
+          "body": {
+            "type": "string",
+            "maxGraphemes": 10000,
+            "maxLength": 100000,
+            "description": "Update body text in markdown."
+          },
+          "photos": {
+            "type": "array",
+            "description": "Optional photos attached to this update.",
+            "maxLength": 10,
+            "items": {
+              "type": "blob",
+              "accept": ["image/jpeg", "image/png", "image/webp", "image/gif"],
+              "maxSize": 2000000
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "datetime",
+            "description": "Timestamp when this update was created."
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,67 @@
+{
+  "lexicon": 1,
+  "id": "social.crate.note.link",
+  "defs": {
+    "main": {
+      "type": "record",
+      "description": "A directed link from one note to another ATProto record or external URL. Powers Zettelkasten backlinks and cross-lexicon connections. One record per link direction — the AppView computes the reverse for backlinks.",
+      "key": "tid",
+      "record": {
+        "type": "object",
+        "required": ["source", "target", "createdAt"],
+        "properties": {
+          "source": {
+            "type": "string",
+            "format": "at-uri",
+            "description": "AT-URI of the social.crate.note that contains this link."
+          },
+          "target": {
+            "type": "object",
+            "description": "Link destination. Exactly one of atUri or externalUrl must be set. atUri is preferred for federated records (notes, books, episodes, talks). externalUrl is used for external web resources or unresolved [[wikilinks]].",
+            "properties": {
+              "atUri": {
+                "type": "string",
+                "format": "at-uri",
+                "description": "AT-URI of the target record when the link resolves to an ATProto resource."
+              },
+              "externalUrl": {
+                "type": "string",
+                "format": "uri",
+                "description": "External URL when the target is outside the AT network (or the [[wikilink]] has not yet been resolved to a record)."
+              },
+              "title": {
+                "type": "string",
+                "maxGraphemes": 300,
+                "maxLength": 3000,
+                "description": "Human-readable title of the link target, stored for display without requiring a round-trip."
+              },
+              "description": {
+                "type": "string",
+                "maxGraphemes": 1000,
+                "maxLength": 10000,
+                "description": "Optional short description or excerpt of the link target."
+              }
+            }
+          },
+          "context": {
+            "type": "string",
+            "maxGraphemes": 1000,
+            "maxLength": 10000,
+            "description": "The surrounding sentence, paragraph, or annotation that contains this link in the source note. Used for rich backlink previews."
+          },
+          "anchorText": {
+            "type": "string",
+            "maxGraphemes": 300,
+            "maxLength": 3000,
+            "description": "The visible link text or [[wikilink]] phrase as it appeared in the source note."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "datetime",
+            "description": "Timestamp when this link record was created."
+          }
+        }
+      }
+    }
+  }
+}

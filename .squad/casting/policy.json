@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "current_universe": "firefly",
+  "lru_window": 5,
+  "allow_overflow": true,
+  "overflow_strategy": ["diegetic_expansion", "thematic_promotion", "structural_mirroring"]
+}

@@ -1,0 +1,60 @@
+{
+  "lexicon": 1,
+  "id": "social.crate.note",
+  "defs": {
+    "main": {
+      "type": "record",
+      "description": "A Zettelkasten-style PKM note. Links to other notes via social.crate.note.link records.",
+      "key": "tid",
+      "record": {
+        "type": "object",
+        "required": ["title", "slug", "body", "publishedAt", "createdAt"],
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxGraphemes": 300,
+            "maxLength": 3000,
+            "description": "Note title."
+          },
+          "slug": {
+            "type": "string",
+            "maxGraphemes": 100,
+            "maxLength": 1000,
+            "description": "URL-safe identifier for the note, used for stable public URLs. Should be unique within the user's repo."
+          },
+          "body": {
+            "type": "string",
+            "maxGraphemes": 100000,
+            "maxLength": 1000000,
+            "description": "Note body in markdown. May contain [[wikilink]] syntax — resolved links are stored as separate social.crate.note.link records."
+          },
+          "tags": {
+            "type": "array",
+            "description": "Freeform tags for categorizing and filtering notes.",
+            "maxLength": 30,
+            "items": {
+              "type": "string",
+              "maxGraphemes": 64,
+              "maxLength": 640
+            }
+          },
+          "publishedAt": {
+            "type": "string",
+            "format": "datetime",
+            "description": "The date this note is considered published. Controls public visibility ordering."
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "datetime",
+            "description": "Timestamp of the most recent edit to this note."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "datetime",
+            "description": "Timestamp when this record was first created in the user's PDS."
+          }
+        }
+      }
+    }
+  }
+}

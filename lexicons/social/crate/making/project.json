@@ -1,0 +1,176 @@
+{
+  "lexicon": 1,
+  "id": "social.crate.making.project",
+  "defs": {
+    "main": {
+      "type": "record",
+      "description": "A unified making/build project record covering fiber arts, code, site, garden, illustration sets, and other creative work.",
+      "key": "tid",
+      "record": {
+        "type": "object",
+        "required": ["title", "kind", "status", "description", "createdAt"],
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxGraphemes": 300,
+            "maxLength": 3000,
+            "description": "Project title."
+          },
+          "kind": {
+            "type": "string",
+            "maxLength": 32,
+            "knownValues": ["fiber", "code", "site", "garden", "illustration-set", "other"],
+            "description": "Project category. Determines which kind-specific metadata block is relevant."
+          },
+          "status": {
+            "type": "string",
+            "maxLength": 32,
+            "knownValues": ["planning", "in-progress", "finished", "paused", "abandoned"],
+            "description": "Current status of the project."
+          },
+          "description": {
+            "type": "string",
+            "maxGraphemes": 10000,
+            "maxLength": 100000,
+            "description": "Project description in markdown."
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "datetime",
+            "description": "When work on the project began."
+          },
+          "finishedAt": {
+            "type": "string",
+            "format": "datetime",
+            "description": "When the project was completed or abandoned."
+          },
+          "links": {
+            "type": "array",
+            "description": "External links associated with the project.",
+            "maxLength": 20,
+            "items": {
+              "type": "object",
+              "required": ["url"],
+              "properties": {
+                "label": {
+                  "type": "string",
+                  "maxGraphemes": 100,
+                  "maxLength": 1000,
+                  "description": "Human-readable label for the link."
+                },
+                "url": {
+                  "type": "string",
+                  "format": "uri",
+                  "description": "URL of the linked resource."
+                }
+              }
+            }
+          },
+          "coverImage": {
+            "type": "blob",
+            "description": "Optional cover image for the project.",
+            "accept": ["image/jpeg", "image/png", "image/webp", "image/gif"],
+            "maxSize": 2000000
+          },
+          "fiber": {
+            "type": "object",
+            "description": "Fiber arts metadata. Only meaningful when kind is 'fiber'.",
+            "properties": {
+              "pattern": {
+                "type": "string",
+                "maxGraphemes": 200,
+                "maxLength": 2000,
+                "description": "Pattern name or identifier."
+              },
+              "yarn": {
+                "type": "string",
+                "maxGraphemes": 200,
+                "maxLength": 2000,
+                "description": "Yarn name and colorway."
+              },
+              "hookSize": {
+                "type": "string",
+                "maxLength": 32,
+                "description": "Hook or needle size (e.g. '4.0mm', 'US G/6')."
+              },
+              "ravelryUrl": {
+                "type": "string",
+                "format": "uri",
+                "description": "URL of the project on Ravelry."
+              }
+            }
+          },
+          "code": {
+            "type": "object",
+            "description": "Software project metadata. Only meaningful when kind is 'code'.",
+            "properties": {
+              "repo": {
+                "type": "string",
+                "format": "uri",
+                "description": "URL of the source code repository."
+              },
+              "language": {
+                "type": "string",
+                "maxLength": 64,
+                "description": "Primary programming language."
+              },
+              "deployedUrl": {
+                "type": "string",
+                "format": "uri",
+                "description": "URL of the live deployed project."
+              }
+            }
+          },
+          "site": {
+            "type": "object",
+            "description": "Website project metadata. Only meaningful when kind is 'site'.",
+            "properties": {
+              "url": {
+                "type": "string",
+                "format": "uri",
+                "description": "Live URL of the site."
+              },
+              "role": {
+                "type": "string",
+                "maxGraphemes": 100,
+                "maxLength": 1000,
+                "description": "Your role on the project (e.g. 'designer', 'developer', 'owner')."
+              }
+            }
+          },
+          "garden": {
+            "type": "object",
+            "description": "Garden project metadata. Only meaningful when kind is 'garden'.",
+            "properties": {
+              "bedNumber": {
+                "type": "string",
+                "maxLength": 32,
+                "description": "Bed or plot identifier."
+              },
+              "plants": {
+                "type": "array",
+                "maxLength": 100,
+                "items": {
+                  "type": "string",
+                  "maxGraphemes": 100,
+                  "maxLength": 1000
+                },
+                "description": "List of plants in this bed or project."
+              },
+              "zone": {
+                "type": "string",
+                "maxLength": 16,
+                "description": "USDA hardiness zone (e.g. '7b')."
+              }
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "datetime",
+            "description": "Timestamp when this record was created."
+          }
+        }
+      }
+    }
+  }
+}

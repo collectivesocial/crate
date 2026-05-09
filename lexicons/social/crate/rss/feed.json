@@ -1,0 +1,57 @@
+{
+  "lexicon": 1,
+  "id": "social.crate.rss.feed",
+  "defs": {
+    "main": {
+      "type": "record",
+      "description": "A subscribed RSS or Atom feed with a configured destination lexicon for imported entries.",
+      "key": "tid",
+      "record": {
+        "type": "object",
+        "required": ["url", "title", "destination", "createdAt"],
+        "properties": {
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "The URL of the RSS or Atom feed."
+          },
+          "title": {
+            "type": "string",
+            "maxGraphemes": 200,
+            "maxLength": 2000,
+            "description": "Human-readable display name for this feed subscription."
+          },
+          "destination": {
+            "type": "string",
+            "maxLength": 128,
+            "description": "NSID of the target lexicon for imported entries (e.g. social.crate.podcast.episode).",
+            "knownValues": [
+              "social.crate.podcast.episode",
+              "site.standard.document"
+            ]
+          },
+          "active": {
+            "type": "boolean",
+            "description": "Whether the poller should actively fetch this feed. Defaults to true.",
+            "default": true
+          },
+          "lastPolledAt": {
+            "type": "string",
+            "format": "datetime",
+            "description": "Timestamp of the most recent successful poll."
+          },
+          "lastEntryGuid": {
+            "type": "string",
+            "maxLength": 2048,
+            "description": "GUID of the last imported entry, used for deduplication on subsequent polls."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "datetime",
+            "description": "Timestamp when this feed subscription was created."
+          }
+        }
+      }
+    }
+  }
+}
