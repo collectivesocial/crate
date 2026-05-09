@@ -240,3 +240,357 @@ Per `.squad/decisions/inbox/` files read during this session:
 - OAuth scopes: write `social.crate.*`, read `site.standard.*` / `community.lexicon.calendar.*` / `app.collective.*` / `app.bsky.feed.post`
 
 These constrain the api/ scaffold (work item #2) but required no action here.
+
+---
+
+# ADR: Lexicon Codegen Pipeline
+
+**Date:** 2026-05-09
+**Author:** Simon (Lexicon Designer)
+**Status:** Accepted
+
+---
+
+## Decision: One Bash script, not npm scripts in lexicons/package.json
+
+**What:** Codegen lives in `lexicons/scripts/codegen.sh` (executable). The `lexicons/package.json` exists only to declare `@atproto/lex-cli` as a devDependency so `npx` resolves the local install. No `scripts` field is present in `lexicons/package.json`; the root delegates via `"lexgen": "./lexicons/scripts/codegen.sh"`.
+
+**Why a .sh and not npm scripts:** The sibling `collective-social-api` handles lexgen with a single npm script (`lex gen-server ./src/lexicon ./lexicons/*`) because it has one output directory. Crate needs three separate invocations (gen-server → `api/src/lexicon/`, gen-api → `web/src/lexicon/`, gen-api → `importers/src/lexicon/`). A Bash script keeps all three invocations in one place, provides friendly stdout, and avoids chaining three npm scripts with `&&`. Matches the `set -euo pipefail` convention seen in sibling shell scripts (`open-social/scripts/reset-db.sh`, `open-social/scripts/start-test-env.sh`).
+
+---
+
+## lex-cli version: `^0.9.7`
+
+**Source:** `collective-social-api/package.json` devDependencies. Lockfile resolves to `0.9.8`. Used `^0.9.7` (same constraint as sibling) for forward compatibility within the minor series. `open-social` has no lex-cli dependency (no lexicons of its own).
+
+---
+
+## Why generated outputs are committed
+
+**Decision:** Generated `api/src/lexicon/`, `web/src/lexicon/`, and `importers/src/lexicon/` directories are committed to the repo.
+
+**Rationale:** Mal's explicit call (see decisions.md, Decision 3). Committing generated types means consumers can import from their local `src/lexicon/` without a build step and CI can detect drift (if lexicons change but codegen isn't re-run, the diff is visible). The sibling `collective-social-api` also commits its `src/lexicon/` output.
+
+---
+
+## Non-obvious implementation calls
+
+- **`find … | sort` + `mapfile -t`** instead of a shell glob: Lexicons live in nested subdirectories (`social/crate/note/link.json`, `social/crate/making/project.json`, etc.). A bare `social/crate/**/*.json` glob requires `shopt -s globstar` and is not portable under `set -euo pipefail` when a pattern matches nothing. `find` + `sort` + `mapfile` is explicit, safe, and produces a stable argument order.
+- **`cd "$LEXICONS_DIR"` before `npx`**: `npx @atproto/lex-cli` resolves the package from the nearest `node_modules` in the directory hierarchy. Running from `lexicons/` ensures it picks up `lexicons/node_modules/@atproto/lex-cli` after `npm install` there, without any `--prefix` magic.
+- **Output dirs as absolute paths**: Because the script `cd`s to `lexicons/`, all output directory arguments are computed as absolute paths from `$REPO_ROOT` before the `cd`, preventing any relative-path confusion.
+- **`mkdir -p` before codegen**: `api/`, `web/`, `importers/` are being scaffolded in parallel (Wash, Kaylee, Zoe). The script creates `src/lexicon/` inside each if it doesn't exist, so it is runnable on a fresh clone once those packages are present.
+- **Coordination note for parallel scaffolders**: Each of `api/`, `web/`, `importers/` should include `src/lexicon/` in their file tree (perhaps with a `.gitkeep`) so the empty dir survives in git until first codegen run. Do NOT add it to `.gitignore` — outputs are committed per Mal's decision.
+
+---
+
+### 2026-05-09T10:46:32-07:00: api/ scaffold — Wash work item #2
+**By:** Wash (Backend / API / OAuth)
+**Status:** Done
+
+---
+
+## Primary sibling mirrored: `open-social`
+
+**Why open-social over collective-social-api:**
+- `open-social` uses Pino (collective does not)
+- `open-social` has `migrations/` + `FileMigrationProvider` (collective uses a different schema management approach)
+- `open-social` uses `tsx watch` for dev (collective uses `ts-node` + nodemon)
+- `open-social` targets ES2022 (collective targets ES2020; decisions.md #4 mandates ES2022)
+- `open-social` has a cleaner `auth/client.ts` + `auth/storage.ts` pattern for `@atproto/oauth-client-node`
+- Both are equivalent for Express 5, Kysely, pg, iron-session, envalid, cors, helmet
+
+---
+
+## OAuth scope string (verbatim)
+
+```
+atproto repo:social.crate.rss.feed repo:social.crate.podcast.episode repo:social.crate.making.project repo:social.crate.making.update repo:social.crate.talk repo:social.crate.illustration repo:social.crate.note repo:social.crate.note.link repo:social.crate.now
+```
+
+**Pattern source:** `open-social/src/middleware/auth.ts`
+```ts
+export const OPENSOCIAL_SCOPES = 'atproto repo:community.opensocial.membership';
+```
+
+**Read-only external collections** (`site.standard.*`, `community.lexicon.calendar.*`, `app.collective.*`, `app.bsky.feed.post`) are NOT in the scope string. Public ATProto records are readable without OAuth. If crate needs to read the *authed user's own* records in those namespaces via authenticated PDS XRPC, add them as additional `repo:` scopes at that time.
+
+---
+
+## Env var names chosen (matching siblings exactly)
+
+| Var | Purpose | Source |
+|-----|---------|--------|
+| `DATABASE_URL` | Postgres connection string | both siblings |
+| `PORT` | HTTP server port | both siblings |
+| `NODE_ENV` | development / production | both siblings |
+| `LOG_LEVEL` | Pino log level | open-social |
+| `SERVICE_URL` | API's public URL (OAuth client_id base) | both siblings |
+| `PLC_URL` | ATProto PLC directory URL | both siblings |
+| `PDS_URL` | Default PDS for handle resolution | both siblings |
+| `PRIVATE_KEYS` | JSON array of JWK private keys | both siblings |
+| `COOKIE_SECRET` | iron-session cookie secret | both siblings |
+| `CORS_ORIGIN` | Allowed web origin (GH Pages in prod) | both siblings |
+
+---
+
+## Key dependency versions
+
+| Package | Version | Source |
+|---------|---------|--------|
+| `express` | ^5.2.1 | open-social |
+| `@atproto/api` | ^0.18.3 | collective-social-api (newer) |
+| `@atproto/oauth-client-node` | ^0.3.13 | open-social |
+| `kysely` | ^0.28.8 | both |
+| `pg` | ^8.16.3 | both |
+| `pino` | ^9.5.0 | open-social |
+| `pino-pretty` | ^11.3.0 | open-social |
+| `iron-session` | ^8.0.4 | both |
+| `envalid` | ^8.1.1 | collective-social-api |
+| `helmet` | ^8.1.0 | collective-social-api |
+| `tsx` | ^4.21.0 | open-social |
+| `typescript` | ^5.9.3 | both |
+| `vitest` | ^4.0.18 | both |
+| `node` (Docker) | 22-alpine | open-social |
+| `postgres` (Docker) | 16 | open-social |
+
+---
+
+## Flags for Brittany / Mal to review
+
+1. **`@atproto/api` version mismatch:** open-social uses `^0.13.35`, collective-social-api uses `^0.18.3`. Chose collective's newer version. Verify no breaking changes before installing.
+
+2. **Read scopes not in OAuth metadata:** The external read collections (`site.standard.*`, `community.lexicon.calendar.*`, `app.collective.*`, `app.bsky.feed.post`) are not listed as `repo:` scopes since ATProto public records don't require OAuth. If crate needs authenticated PDS access to those collections for the authed user, we'll need to add them.
+
+3. **`app.collective.*` NSID unverified:** plan.md flags this as "verify". The scope string uses only the 9 confirmed `social.crate.*` NSIDs. Once the Collective NSID is confirmed, consider adding `repo:app.collective.<record>` if crate writes RSVP-style records there.
+
+4. **eslint.config.js:** Neither sibling ships an `eslint.config.js` flat config. Created a minimal `typescript-eslint` config; add `eslint` and `typescript-eslint` to devDependencies when installing.
+
+---
+
+# ADR: web/ Scaffold Decisions
+
+**Date:** 2026-05-09
+**Author:** Kaylee (Web App)
+**Status:** Accepted
+
+---
+
+## Primary sibling pattern chosen: `collective-social-web`
+
+`collective-social-web` is the richer reference: it has the full Chakra v3 provider stack (ChakraProvider + ColorModeProvider + next-themes), detailed semantic token naming, named exports throughout, and a vitest + testing-library setup. `open-social-web` was consulted for its API client shape (`api.get / post / put / del`) and its standalone `vitest.config.ts`. Both use identical GH Pages deploy workflows.
+
+---
+
+## Chakra v3 setup
+
+- `src/theme.ts` exports `system = createSystem(defaultConfig, customConfig)` where `customConfig = defineConfig({...})`.
+- `colorPalette: 'teal'` throughout (Chakra v3 `colorPalette`, NOT `colorScheme`).
+- Provider stack in `main.tsx`: `<ChakraProvider value={system}> → <ColorModeProvider> → <RouterProvider>`.
+- `ColorModeProvider` wraps next-themes `<ThemeProvider attribute="class" disableTransitionOnChange>`.
+- Semantic tokens follow the `bg.*` / `fg.*` / `accent.*` / `border.*` pattern from siblings, tinted teal instead of terracotta/amber.
+- Global CSS in `defineConfig({ globalCss: {...} })`.
+
+---
+
+## API client shape
+
+Exported as `apiFetch` from `src/lib/api.ts`:
+
+```ts
+export const apiFetch = {
+  get:   <T>(path: string) => request<T>(path),
+  post:  <T>(path: string, body?: unknown) => request<T>(path, { method: 'POST', ... }),
+  put:   <T>(path: string, body?: unknown) => request<T>(path, { method: 'PUT', ... }),
+  patch: <T>(path: string, body?: unknown) => request<T>(path, { method: 'PATCH', ... }),
+  del:   <T>(path: string, body?: unknown) => request<T>(path, { method: 'DELETE', ... }),
+}
+```
+
+Conventions:
+- Base: `import.meta.env.VITE_API_URL` (empty in dev → Vite proxy).
+- Every request: `credentials: 'include'`.
+- Non-2xx: parse JSON body, surface `error + details`, throw `new Error(message)`.
+- `patch` added vs. open-social-web's `api` shape (useful for partial record updates).
+
+---
+
+## Base path strategy
+
+- Env var: `VITE_BASE_PATH` (string, e.g. `/crate/` or `/`).
+- Read in `vite.config.ts` via `process.env.VITE_BASE_PATH ?? '/'`.
+- Passed to Vite `base` option → available as `import.meta.env.BASE_URL` at runtime.
+- `createBrowserRouter` receives `basename: import.meta.env.BASE_URL` so React Router prefixes all links correctly.
+- Set `VITE_BASE_PATH=/crate/` in the GitHub Actions repository variable when deploying to `brittanyellich.github.io/crate`.
+- Leave as `/` once the custom domain `crate.social` is pointed at GitHub Pages.
+
+---
+
+## SPA routing fallback
+
+Chose the full **spa-github-pages redirect trick** (rafgraph) rather than the sibling `cp dist/index.html dist/404.html` shortcut, because the path-encoding approach handles the configurable base path more robustly.
+
+- `public/404.html`: encodes current URL as query-string and redirects to `index.html`.
+  - `pathSegmentsToKeep = 0` for custom domain; set to `1` for repo subdirectory.
+- `index.html`: decoder script runs before React boots, restores the URL via `history.replaceState`.
+
+---
+
+## Deploy workflow
+
+File: `.github/workflows/deploy-web.yml`
+
+- Trigger: `push` to `main` with `paths: web/**`, plus `workflow_dispatch`.
+- Concurrency: `cancel-in-progress: true` (pages group).
+- Node 22 (upgrade from siblings' Node 20, per Decision 4 in decisions.md).
+- `npm ci --prefix web` + `npm run build --prefix web`.
+- `VITE_BASE_PATH` and `VITE_API_URL` injected from GitHub repository variables (`vars.*`) with sensible defaults.
+- `actions/upload-pages-artifact@v3` + `actions/deploy-pages@v4` — identical to both sibling workflows.
+
+---
+
+# Decision: Landing Site Scaffold — Astro 5, Tailwind 4, GitHub Pages
+
+**Date:** 2026-05-09
+**By:** Inara (Landing Site)
+**Status:** Implemented
+**Work Item:** #4 — Scaffold landing/
+
+---
+
+## Decision: Deploy target is GitHub Pages
+
+**What:** The `landing/` directory deploys to GitHub Pages via GitHub Actions. Workflow file at `.github/workflows/deploy-landing.yml`.
+
+**Rationale:**
+- Both sibling repos (`collective-landing`, `open-landing`) use GitHub Pages for landing sites.
+- Matches the pattern established in the Collective ecosystem.
+- Minimal setup — no 3rd party account needed.
+- Static Astro output (no backend required) is a perfect fit for GH Pages.
+
+**Implementation:**
+- Workflow triggers on push to `main` and on workflow dispatch.
+- Builds `landing/dist` artifact.
+- Actions: `actions/checkout@v4`, `actions/setup-node@v4` (node 22), `npm ci --prefix landing`, `npm --prefix landing run build`, `actions/upload-pages-artifact@v3`, `actions/deploy-pages@v4`.
+- Node 22 (consistent with root decisions.md Decision 4).
+
+---
+
+## Related: Astro 5 + Tailwind 4 stack
+
+**Astro version:** 5.15.6 (matching siblings).
+
+**Styling:** Tailwind CSS 4.1.8 with @tailwindcss/vite plugin (matching collective-landing's approach, not separate postcss + tailwind plugin — vite plugin is the newer pattern).
+
+**Why Tailwind 4 vite plugin over classic tailwindcss?**
+- Astro 5 + Tailwind 4 recommends the vite plugin approach for better bundling and DX.
+- Smaller output, faster build.
+- Consistent with collective-landing's current setup.
+
+---
+
+## Site URL and metadata
+
+**Site URL:** `https://crate.social` (placeholder; Brittany to confirm domain).
+
+**OG image:** `/og.png` placeholder in meta tags. Brittany to upload actual image to `landing/public/og.png`.
+
+---
+
+## Open questions for Brittany
+
+1. **Domain name:** Is crate.social final, or should we update the site URL in `astro.config.mjs`?
+2. **Marketing copy tone:** The placeholder is technical and confident. Should it be more approachable? More "product-y"?
+3. **Additional pages:** Does the landing need docs, pricing, features breakdown beyond the homepage? (Can be added incrementally.)
+4. **Favicon:** The placeholder is a simple "C" in blue. Preferred branding?
+5. **OG image:** Should we create a simple graphic, or leave it for Brittany to provide?
+
+---
+
+# ADR: importers/ harness scaffold
+
+**Date:** 2026-05-09
+**Author:** Zoe (Import Adapters)
+**Status:** Accepted — harness only; adapters pending
+**Work Item:** #5
+
+---
+
+## What was built
+
+`importers/` — a standalone CLI package (independent `package.json`, no workspace linking per Decision 2) providing a Commander-based harness for one-time content imports into crate.social. No adapters implemented; each subcommand is a stub.
+
+---
+
+## Decision: CLI framework — commander v12
+
+**Chosen:** `commander` (^12.1.0)
+
+**Alternatives considered:**
+- `yargs` — more feature-rich but heavier; API is more verbose for this use case.
+- Plain argv parsing — inappropriate given multiple subcommands with per-command flags.
+
+**Rationale:** No sibling repo uses either framework in scripts (they use plain `tsx` for one-off scripts). Commander was chosen for its TypeScript-first API, minimal overhead, and industry adoption. Revisit if we add many nested subcommands (yargs shines there).
+
+---
+
+## Decision: Package type — ESM (`"type": "module"`)
+
+`importers/` uses `"type": "module"` to align with modern Node 22 conventions. The `api/` package will likely use CommonJS (matching `open-social`). These are independent packages — no conflict.
+
+---
+
+## Decision: Logger — Pino (duplicated from open-social)
+
+Pino `^9.5.0` + `pino-pretty ^11.3.0`, mirroring `open-social/src/lib/logger.ts` exactly. Not imported from `api/` — packages are independent per Decision 2. `console.*` is prohibited per team convention.
+
+---
+
+## Open question #1 — Authentication strategy (NEEDS DECISION before first real adapter)
+
+**The question:** How does the CLI obtain a write-capable ATProto session?
+
+**Option A — Token file** (`~/.crate/session.json`):
+User exports a session JSON from the crate.social web app. Importer reads it, calls `agent.resumeSession()`. Simple, zero CLI dependencies. **Risk:** access tokens expire (typically 2h); user must re-export. Refresh tokens last longer but require `agent.resumeSession` + auto-refresh plumbing.
+
+**Option B — Interactive ATProto OAuth from CLI**:
+Use `@atproto/oauth-client-node` to initiate a DPoP-based OAuth flow directly from the terminal (opens browser, waits for callback, stores tokens in `~/.crate/tokens.json`). Tokens auto-refresh. **Risk:** more setup complexity; requires a registered OAuth client for the CLI (different `client_id` from the web app).
+
+**Recommendation:** Start with Option A (token file). It unblocks the first adapter immediately. Upgrade to Option B once the web OAuth flow is stable and a CLI client ID is registered.
+
+**Brittany's decision needed:** Which option for v1? Should the token file live at `~/.crate/session.json` or in the working directory?
+
+---
+
+## Open question #2 — Idempotency strategy (NEEDS DECISION before first real adapter)
+
+**The question:** How do we prevent re-importing the same item if the CLI is run twice?
+
+**Option A — Local sidecar file** (`.import-state.json` in working dir):
+Hash the source item's stable ID (RSS GUID, markdown file path + slug), store `{ hash → atUri }` in a gitignored JSON file. **Fast, offline, zero-network.** Risk: machine-local; lost if you change machines or wipe the directory.
+
+**Option B — Query the user's PDS**:
+Before writing, list existing records of the target lexicon and check for a matching source identifier (e.g. `guid` field on `social.crate.podcast.episode`). **Authoritative, survives machine changes.** Cost: one extra `com.atproto.repo.listRecords` call per import run.
+
+**Recommendation:** Use both: Option A as a fast-path cache, Option B on cache miss. But for v1, Option A alone is sufficient.
+
+**Brittany's decision needed:** Is a machine-local state file acceptable for v1? Which directory should it live in?
+
+---
+
+## Key dependency versions
+
+| Package | Version | Purpose |
+|---|---|---|
+| `commander` | ^12.1.0 | CLI framework |
+| `@atproto/api` | ^0.13.35 | PDS writes (matched open-social) |
+| `pino` | ^9.5.0 | Logging (matched open-social) |
+| `pino-pretty` | ^11.3.0 | Dev log formatting |
+| `zod` | ^4.3.6 | Record validation (matched open-social) |
+| `tsx` | ^4.19.2 | Dev runner (matched open-social scripts) |
+| `vitest` | ^2.1.8 | Tests (matched team Decision 4) |
+
+---
+
+## api/ vs importers/ split
+
+`importers/` = one-time CLI runs. `api/workers/` = background polling (Wash's). Adapter parsing logic may eventually be shared, but the execution contexts are fundamentally different (CLI process vs. long-lived server). Shared adapter library should wait until both sides exist and the common interface is clear.
