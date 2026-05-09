@@ -594,3 +594,290 @@ Before writing, list existing records of the target lexicon and check for a matc
 ## api/ vs importers/ split
 
 `importers/` = one-time CLI runs. `api/workers/` = background polling (Wash's). Adapter parsing logic may eventually be shared, but the execution contexts are fundamentally different (CLI process vs. long-lived server). Shared adapter library should wait until both sides exist and the common interface is clear.
+### 2026-05-09T11:10:23-07:00: Namespace correction — Collective lexicons
+**By:** Simon (verified) → Brittany Ellich (via Squad)
+**What:** The Collective ecosystem's lexicons live under `app.collectivesocial.*`, NOT `app.collective.*` as previously written in plan.md and earlier directives.
+- Source: `/Users/brittanyellich/Documents/Code/Collective/collective-social-api/lexicons/`
+- The "book" lexicon Brittany asked about: **`app.collectivesocial.list`** with `purpose: "book-club"` (paired with `app.collectivesocial.listitem` for entries). It's a generic list with a purpose discriminator, not a dedicated book record.
+- 21 total NSIDs in the namespace (catalogued in plan.md footnote and `simon-collective-nsids-verified.md`).
+**Why:** Verified by Simon during the P0 NSID audit. plan.md updated with the verified catalog and a footnote pointer. No `social.crate.*` updates needed — the `social.crate.note.link.target` flat shape can reference any AT-URI, including `app.collectivesocial.list` records.
+**Note:** Same approach (look in `/Users/brittanyellich/Documents/Code/Collective/open-social/lexicons/`) for open-social cross-references when they come up.
+### 2026-05-09T10:26:27-07:00: Deployment topology
+**By:** Brittany Ellich (via Squad)
+**What:** Each project deploys separately.
+- `api/` deploys to the **same server as the rest of the Collective apps** (alongside `collective-social-api` and `open-social`). Must share the OAuth/Postgres setup there. Wash mirrors `collective-social-api` and `open-social` deploy/db/OAuth conventions — same connection patterns, same env var conventions, same migration runner shape.
+- `web/` deploys to **GitHub Pages** as a fully static SPA. Vite base path, GH Actions workflow, SPA routing fallback (404.html trick or hash routing) all required. Because web is fully static, **all dynamic concerns (sessions, OAuth callback handling) live in `api/`**. Web talks to api over HTTPS with `credentials: 'include'`.
+- `landing/` deploys separately (Astro static). Target TBD by Inara — likely GH Pages or similar.
+**Why:** Aligns with how Brittany already deploys the Collective ecosystem; lets crate.social piggyback on existing shared infrastructure.
+### 2026-05-09T10:26:27-07:00: Git init bundled into work item #7
+**By:** Brittany Ellich (via Squad)
+**What:** Work item #7 (root config files) now also includes `git init` of the crate repo, initial commit of all current files (`plan.md`, `.squad/`, `.gitattributes`, the new root configs).
+**Why:** Repo isn't initialized yet. Doing it as part of the scaffold keeps the first real commit clean and lets Scribe start committing memory updates from session two onward.
+### 2026-05-09T11:10:23-07:00: Importer auth + idempotency strategy (P1)
+**By:** Brittany Ellich (via Squad)
+**What:** Zoe's recommendations accepted for v1 of the import CLI:
+- **Auth:** User exports a session JSON from the web app to `~/.crate/session.json`; CLI reads it. Tokens expire ~2h; user re-exports as needed. Upgrade to interactive OAuth via `@atproto/oauth-client-node` once web OAuth flow is stable.
+- **Idempotency:** Local `.import-state.json` sidecar — hash of source URL + content → atUri. Zero-network. PDS `listRecords` query as fallback on cache miss for cross-machine recovery.
+**Why:** Both v1 strategies are simple, ship-able, and have clear upgrade paths. Defer the more robust options until the simple version reveals real friction.
+### 2026-05-09T10:26:27-07:00: OAuth scopes — mirror sibling pattern
+**By:** Brittany Ellich (via Squad)
+**What:** Wash uses **explicit scoped OAuth** matching how `collective-social-api` and `open-social` already do it. Mirror their scope strings, client metadata shape, and OAuth client config. Required scopes for crate.social:
+- Write access for all `social.crate.*` record types to the user's PDS.
+- Read access for external lexicons used in the catalog: `site.standard.*`, `community.lexicon.calendar.*`, `app.collective.*`, `app.bsky.feed.post`.
+**Why:** Consistency with sibling Collective apps; explicit scopes are the right ATProto OAuth pattern; piggybacks on a config approach Brittany has already validated.
+### 2026-05-09T11:10:23-07:00: P0 resolutions accepted
+**By:** Brittany Ellich (via Squad)
+**What:** Three P0 questions resolved:
+1. Wash's choice to mirror `open-social` (Pino, FileMigrationProvider, ES2022) over `collective-social-api` is accepted. Open-social has the closer ATProto-OAuth pattern.
+2. Write-only OAuth scopes are accepted. Public ATProto reads don't require explicit scopes; keep the current scope string (9 `repo:social.crate.*` write scopes).
+3. `app.collective.*` lexicons are real — defined in `collective-social-api/lexicons/`. Simon will verify the actual NSIDs from that repo and update plan.md's catalog footnote with the verified values. Same approach for open-social cross-references when they show up.
+**Why:** Brittany confirmed Wash's calls were defensible; surfaced where the Collective lexicons actually live.
+# Mal Scaffold Review — 2026-05-09
+
+**Verdict:** APPROVE WITH FIXES
+
+4 blocking flags. Fix these before functional feature work begins.
+
+---
+
+## 🚩 Blocking Flags
+
+### 1. Dev port mismatch: Vite proxy → 3002, api runs on 3000
+**Owner:** Kaylee (primary) + Wash (verify api port)
+**Files:** `web/vite.config.ts` lines 23–27, `api/src/config.ts` line 18
+**Issue:** `vite.config.ts` proxies `/oauth`, `/login`, `/logout`, `/.well-known`, `/xrpc` to `http://127.0.0.1:3002`. The api's `PORT` default is `3000`. Local dev proxy hits nothing.
+**Fix:** Change proxy target in `web/vite.config.ts` to `http://127.0.0.1:3000`, OR change api default `PORT` to `3002` and update config docs. Pick one and be consistent.
+
+---
+
+### 2. CORS dev whitelist hardcodes port 5173; Vite dev server is on port 5175
+**Owner:** Wash
+**Files:** `api/src/index.ts` line 23, `web/vite.config.ts` line 21
+**Issue:** `api/src/index.ts` allows CORS from `http://127.0.0.1:5173` / `http://localhost:5173`. Vite dev server binds to port `5175`. All credentialed requests from web → api will be CORS-rejected in local dev.
+**Fix:** Change the two dev CORS origins in `api/src/index.ts` to port `5175`, OR drive the allowed origin from an env var (`CORS_ORIGIN` already exists in config) and document the dev default.
+
+---
+
+### 3. `importers/@atproto/api` version gap: `^0.13.35` vs api's `^0.18.3`
+**Owner:** Zoe
+**File:** `importers/package.json` line 18
+**Issue:** Five minor versions behind. `@atproto/lex-cli gen-api` output is generated against the installed `@atproto/api` type surface. If the codegen emits types that reference APIs added in 0.14–0.18, the TypeScript build fails. Also inconsistent with the rest of the ecosystem.
+**Fix:** Bump to `"@atproto/api": "^0.18.3"` to match api. Run `npm install` in `importers/` after.
+
+---
+
+### 4. Both deploy workflows target the same `github-pages` environment
+**Owner:** Kaylee + Inara
+**Files:** `.github/workflows/deploy-web.yml`, `.github/workflows/deploy-landing.yml`
+**Issue:** Both use `actions/deploy-pages@v4` against the `github-pages` environment. GitHub Pages hosts one site per repo. Whichever workflow runs second overwrites the first deployment. Landing and web app cannot coexist this way.
+**Fix:** Decide topology. Options:
+  - (A) Landing stays on GitHub Pages (`crate.social`); web app deploys elsewhere (Railway, Fly, Render, separate repo + Pages).
+  - (B) Merge into one Pages deployment: Astro builds into a subdirectory, Vite builds into another. One workflow, one upload.
+  - (C) Use GitHub Pages path prefixes (landing at `/`, web at `/app/`) with `VITE_BASE_PATH=/app/`.
+  Brittany decides. Coordinator should surface this as a topology question before CI work proceeds.
+
+---
+
+## ✅ Approved (no action needed)
+
+- **lexicons/scripts/codegen.sh + lexicons/package.json (Simon):** Clean. Output paths match all three consumers. Error handling correct.
+- **api/ scaffold (Wash):** Express 5, Kysely, Pino, iron-session, envalid — all correct per decisions.md. OAuth client metadata, scope string (9 write scopes), CORS `credentials: true` all good. Boot path solid. ES2022/commonjs tsconfig matches open-social.
+- **web/src/lib/api.ts (Kaylee):** `credentials: 'include'` on every request ✅. `VITE_API_URL` env wiring ✅. No SSR/Node APIs in web/src ✅. Fully static via Vite.
+- **web/ tsconfig + package.json (Kaylee):** Internally consistent. Vitest 4, React 19, Chakra v3 ✅.
+- **landing/ (Inara):** Astro 5 + Tailwind 4, `output` defaults to `static` ✅, `site: https://crate.social` set.
+- **importers/ structure (Zoe):** ESM module, tsx CLI, session-file auth strategy per coordinator decision ✅. Lexicon dir at `src/lexicon/` matches codegen output path.
+- **Root package.json + .nvmrc + .prettierrc (Wash):** npm 10, Node 22, convenience scripts correct. Prettier 3.
+
+---
+
+## 🟡 Non-Blocking Notes
+
+1. **`api/package.json` `lexgen` script** (`"lex gen-server ./src/lexicon ./lexicons/*"`) — `./lexicons/` doesn't exist relative to `api/`. This script would fail if run in isolation. The root `npm run lexgen` → `codegen.sh` is the correct path; the api-level script is vestigial. (Wash — low priority cleanup)
+2. **`importers` vitest `^2.1.8`** — rest of the project uses Vitest 4. Won't break builds but inconsistent. (Zoe — bump when convenient)
+3. **`deploy-landing.yml` missing `cache-dependency-path: landing/package-lock.json`** — cache will be a no-op for the landing build. Minor CI perf issue. (Inara)
+# Collective NSIDs Verified
+
+**Date:** 2026-05-09  
+**By:** Simon (Lexicon Designer)  
+**Status:** Verified and documented  
+
+## Summary
+
+Brittany asked Simon to verify the actual NSIDs of Collective's lexicons (specifically the "book" NSID) from the `collective-social-api` repository. All `app.collectivesocial.*` NSIDs have been cataloged and verified.
+
+**Key finding:** The Collective app uses **`app.collectivesocial.*`** namespace, NOT `app.collective.*`. There is no separate `app.collective.book` NSID; instead, books are represented as Collective *lists* with `purpose: "book-club"`.
+
+## Verified NSIDs for note-to-Collective linking
+
+| NSID | Type | Purpose |
+|------|------|---------|
+| `app.collectivesocial.list` | record | Shared lists (including book clubs); has `purpose: "book-club"` enum value |
+| `app.collectivesocial.listitem` | record | Items within lists |
+
+The `app.collectivesocial.list` record is the primary target for notes that reference Collective books/lists.
+
+## Complete NSID Catalog
+
+All verified NSIDs extracted from `/Users/brittanyellich/Documents/Code/Collective/collective-social-api/lexicons/`:
+
+### User-scoped (personal lists & items)
+- `app.collectivesocial.list` — user's personal lists
+- `app.collectivesocial.listitem` — items in user's lists
+
+### Group/Community lists & activity
+- `app.collectivesocial.group.list` — shared list owned by a group
+- `app.collectivesocial.group.listitem` — item in a group list
+- `app.collectivesocial.group.listitem.status` — status updates for group list items
+- `app.collectivesocial.group.post` — group post
+- `app.collectivesocial.group.postindex` — group post index
+- `app.collectivesocial.group.reaction` — reaction to group posts
+- `app.collectivesocial.group.segment` — reading/watching segments (chapters, pages, etc.)
+- `app.collectivesocial.group.segment.progress` — progress tracking for segments
+
+### Feed-scoped activity (activity feed events)
+- `app.collectivesocial.feed.list` — activity event: list created/updated
+- `app.collectivesocial.feed.listitem` — activity event: item added to list
+- `app.collectivesocial.feed.comment` — comment on a list item
+- `app.collectivesocial.feed.completion` — activity event: user completed a list/item
+- `app.collectivesocial.feed.goal` — activity event: reading/watching goal set
+- `app.collectivesocial.feed.grouppost` — activity event: group post made
+- `app.collectivesocial.feed.react` — activity event: user reacted to something
+- `app.collectivesocial.feed.review` — activity event: user posted a review
+- `app.collectivesocial.feed.reviewsegment` — review tied to a specific segment
+- `app.collectivesocial.feed.segmentprogress` — activity event: progress on segment reported
+- `app.collectivesocial.feed.useritem` — activity event: user action on list item
+
+## Social.crate.* Impact
+
+**Cross-reference check:** Do any `social.crate.*` lexicons need updates due to this discovery?
+
+**Answer:** NO. The `social.crate.note.link` record's `target` object is flexible enough to reference Collective records without schema changes:
+
+```json
+"target": {
+  "type": "object",
+  "properties": {
+    "atUri": {
+      "type": "string",
+      "format": "at-uri",
+      "description": "AT-URI of the target record when the link resolves to an ATProto resource."
+    },
+    "externalUrl": {
+      "type": "string",
+      "format": "uri",
+      "description": "External URL when the target is outside the AT network..."
+    },
+    "title": { ... },
+    "description": { ... }
+  }
+}
+```
+
+Notes can link to Collective lists via `target.atUri` set to an AT-URI of an `app.collectivesocial.list` record. The design is intentionally flexible for exactly this use case.
+
+## Plan.md Updates
+
+**Updated:** `plan.md` now documents the verified NSIDs:
+1. Removed "(verify)" placeholder from the external lexicons table
+2. Added specific entries for `app.collectivesocial.list` and `app.collectivesocial.listitem`
+3. Added footnote [1] documenting the complete verified NSID catalog and source path
+
+## Future reference
+
+When implementing note-to-book linking or Collective integrations:
+- **Primary target NSID:** `app.collectivesocial.list` (book clubs are lists with `purpose: "book-club"`)
+- **Source:** `/Users/brittanyellich/Documents/Code/Collective/collective-social-api/lexicons/`
+- **Note:** The `app.collectivesocial.group.list` is for group/community-owned lists; `app.collectivesocial.list` is for user-owned lists.
+
+## Namespace clarification
+
+It is easy to confuse:
+- `app.collectivesocial.*` ✅ (the ACTUAL namespace used in collective-social-api)
+- `app.collective.*` ❌ (NOT used; this was Brittany's original placeholder question)
+- `pub.collective.*` ❌ (not found)
+
+The `app.collectivesocial` namespace mirrors Bluesky's `app.bsky.*` pattern and is the authoritative location for all Collective lexicons.
+# ADR: Initial `social.crate.*` Lexicons
+
+**Date:** 2026-05-09
+**Author:** Simon (Lexicon Designer)
+**Status:** Implemented — all 9 files authored and JSON-validated.
+
+---
+
+## Lexicon Inventory
+
+### 1. `social.crate.rss.feed`
+**Purpose:** A subscribed RSS/Atom feed with a configured destination lexicon for imported entries.
+**Key fields:** `url` (uri, req), `title` (req), `destination` (NSID, req), `active` (bool), `lastPolledAt`, `lastEntryGuid`, `createdAt` (req).
+**Shape calls:** `destination` uses `knownValues` rather than a closed enum so new target NSIDs can be added without a lexicon version bump. `lastEntryGuid` is a plain string (not typed) because RSS GUIDs are heterogeneous.
+
+---
+
+### 2. `social.crate.podcast.episode`
+**Purpose:** An individual podcast episode, typically imported from an RSS feed.
+**Key fields:** `title` (req), `audioUrl` (uri, req), `showName` (req), `publishedAt` (datetime, req), `feedRef` (at-uri), `guid`, `createdAt` (req).
+**Shape calls:** Added `episodeUrl` (not in plan draft) for the canonical web page — feeds frequently include this and it's useful for deduplication and display. `duration` is integer seconds (not a formatted string) for easy arithmetic.
+
+---
+
+### 3. `social.crate.making.project`
+**Purpose:** A unified making/build project record (fiber, code, site, garden, illustration-set, other).
+**Key fields:** `title` (req), `kind` (knownValues, req), `status` (knownValues, req), `description` (markdown, req), `coverImage` (blob), `createdAt` (req).
+**Shape calls:** Kind-specific metadata (`fiber`, `code`, `site`, `garden`) are optional nested objects rather than a union. This avoids requiring `$type` on each variant and keeps the record self-describing. The AppView filters by `kind` to decide which block to render. `links` array items only require `url` — `label` is optional to match real-world data where labels aren't always present.
+
+---
+
+### 4. `social.crate.making.update`
+**Purpose:** A progress update or journal entry attached to a making project.
+**Key fields:** `project` (at-uri, req), `body` (markdown, req), `photos` (array of blobs, max 10), `createdAt` (req).
+**Shape calls:** Minimal by design — updates are sub-documents; the project record holds all metadata. Photos are blobs (not URLs) so they're owned by the user's PDS.
+
+---
+
+### 5. `social.crate.talk`
+**Purpose:** A conference talk or presentation.
+**Key fields:** `title` (req), `eventName` (req), `givenAt` (datetime, req), `eventRef` (at-uri, optional), `slidesUrl`, `videoUrl`, `coPresenters`, `createdAt` (req).
+**Shape calls:** `coPresenters` items require `name` but make `did` optional — co-presenters may not be ATProto users. `eventRef` is an AT-URI to `community.lexicon.calendar.event`; this is a soft link (no verification), consistent with ATProto's approach to cross-lexicon references.
+
+---
+
+### 6. `social.crate.illustration`
+**Purpose:** A stick-figure illustration or piece of artwork.
+**Key fields:** `caption` (req — doubles as alt text), `image` (blob, req), `title` (optional), `topic`, `sourcePost` (at-uri), `createdAt` (req).
+**Shape calls:** `caption` is required (not `title`) because it also serves as alt text for accessibility. `title` is optional since many illustrations are captioned but untitled. `image` accepts SVG in addition to raster formats.
+
+---
+
+### 7. `social.crate.note`
+**Purpose:** A Zettelkasten-style PKM note; the backbone of the show-day demo.
+**Key fields:** `title` (req), `slug` (req), `body` (markdown, req), `publishedAt` (datetime, req), `tags` (array), `updatedAt`, `createdAt` (req).
+**Shape calls:** `slug` is required (not in all sibling lexicons) because stable URL routing on the personal site depends on it. `body` has a large cap (100k graphemes / 1 MB) to accommodate long-form Zettelkasten notes. `[[wikilink]]` syntax is stored raw in `body`; resolved links live as separate `social.crate.note.link` records — clean separation of content and graph.
+
+---
+
+### 8. `social.crate.note.link`
+**Purpose:** A directed link from one note to any ATProto record or external URL — powers Zettelkasten backlinks and cross-lexicon connections.
+**Key fields:** `source` (at-uri, req), `target` (object, req), `context` (surrounding sentence), `anchorText`, `createdAt` (req).
+**Shape calls:**
+- **`target` is a flat object, not an ATProto union.** A true union would require `$type` on every target record and a separate `#def` for each variant — over-engineered for a link that resolves at read time. The flat object (`{ atUri?, externalUrl?, title?, description? }`) matches the plan's intent and is simpler for the importer to produce. Constraint: exactly one of `atUri` / `externalUrl` must be set; enforced at the application layer.
+- **`anchorText` added (not in plan).** Stores the raw `[[wikilink]]` phrase or visible link text so the AppView can render backlink previews without re-parsing the source note body.
+- **`context` retained** (from plan) for rich backlink previews — the surrounding sentence gives readers enough signal to decide whether to click through.
+- **Backlinks are computed, not stored.** To find all notes linking to a given target, the AppView queries all `social.crate.note.link` records across the firehose where `target.atUri` matches. This is federated by design — anyone on any PDS can create a link pointing at your note.
+
+---
+
+### 9. `social.crate.now`
+**Purpose:** A "now" page entry describing current focus. Append-only stream — latest by `createdAt` is the live now page.
+**Key fields:** `body` (markdown, req), `createdAt` (req).
+**Shape calls:** Intentionally minimal — the append-only stream pattern means older records are archived automatically. No `updatedAt` because edits should be new records (preserves the history).
+
+---
+
+## Open Questions for Brittany / Mal
+
+1. **`social.crate.rss.feed.destination` knownValues** — currently lists `social.crate.podcast.episode` and `site.standard.document`. Confirm the newsletter destination (Offprint's actual lexicon NSID) before the RSS importer ships.
+2. **`social.crate.note` slug uniqueness** — the lexicon can't enforce uniqueness; that's an AppView concern. Wash needs a unique index on `(did, slug)` in Postgres.
+3. **`social.crate.note.link` backlink federation** — the demo requires the AppView to subscribe to the firehose and index incoming link records. Confirm with Wash that the indexer will track `social.crate.note.link` records across all DIDs, not just the authenticated user's.
+4. **`social.crate.making.project.coverImage` maxSize** — set to 2 MB matching sibling pattern. Fiber project photos can be larger; increase to 5 MB if needed.
+5. **`social.crate.illustration.image` SVG acceptance** — SVG is included but some ATProto clients may not handle it. Flag for Kaylee to confirm the web renderer handles SVGs safely.
