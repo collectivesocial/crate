@@ -10,10 +10,11 @@ For the full vision, architecture decisions, and lexicon catalog, see [plan.md](
 crate/
 ├── api/          # backend service (Express, Postgres/Kysely, ATProto OAuth)
 ├── lexicons/     # social.crate.* lexicon JSON definitions
-└── importers/    # source adapters (RSS, markdown)
+├── importers/    # source adapters (RSS, markdown)
+└── landing/      # marketing site (Astro + Tailwind) — hibernating until ready to ship
 ```
 
-> **Sibling repos:** The web app and landing page have been extracted into separate repositories — [`crate-web`](../crate-web) (React 19 + Vite + Chakra UI) and [`crate-landing`](../crate-landing) (Astro) — so each can deploy independently to GitHub Pages. Both sibling repos read lexicon types from `../crate/lexicons/` via a local `lexgen:local` script.
+> **Sibling repos:** The web app has been extracted into a separate repository — [`crate-web`](../crate-web) (React 19 + Vite + Chakra UI) — so it can deploy independently to GitHub Pages. `crate-web` reads lexicon types from `../crate/lexicons/` via a local `lexgen:local` script. The landing site remains in this repo at `landing/` until it's ready to ship.
 
 ## Prerequisites
 

@@ -8,6 +8,8 @@
   "scripts": {
     "dev:api": "npm --prefix api run dev",
     "build:api": "npm --prefix api run build",
+    "dev:landing": "npm run dev --prefix landing",
+    "build:landing": "npm run build --prefix landing",
     "test": "npm --prefix api test && npm --prefix importers test",
     "lexgen": "./lexicons/scripts/codegen.sh",
     "format": "prettier --write .",

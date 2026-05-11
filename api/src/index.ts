@@ -44,12 +44,10 @@ async function start() {
     const oauthClient = await createOAuthClient(db);
     logger.info('OAuth client initialized');
 
-    // oauthClient will be passed to OAuth routes in work item #3.
-    // Declared here to verify it initializes correctly at startup.
-    void oauthClient;
+    const ctx = { db, logger, oauthClient };
 
     // Mount routes
-    mountRoutes(app);
+    mountRoutes(app, ctx);
 
     // Global error handler (must be last)
     app.use(

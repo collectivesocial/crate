@@ -22,6 +22,7 @@
     "@atproto/api": "^0.18.3",
     "@atproto/lexicon": "^0.5.2",
     "@atproto/oauth-client-node": "^0.3.13",
+    "@atproto/xrpc-server": "^0.10.20",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "envalid": "^8.1.1",

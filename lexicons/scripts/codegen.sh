@@ -10,7 +10,10 @@ echo "    repo root: $REPO_ROOT"
 echo ""
 
 # Collect all social.crate.* lexicon JSON files
-mapfile -t LEXICON_FILES < <(find "$LEXICONS_DIR/social/crate" -name "*.json" | sort)
+LEXICON_FILES=()
+while IFS= read -r -d '' f; do
+  LEXICON_FILES+=("$f")
+done < <(find "$LEXICONS_DIR/social/crate" -name "*.json" -print0 | sort -z)
 
 if [[ ${#LEXICON_FILES[@]} -eq 0 ]]; then
   echo "ERROR: No lexicon files found under $LEXICONS_DIR/social/crate" >&2
@@ -33,10 +36,10 @@ mkdir -p "$API_LEXICON" "$IMPORTERS_LEXICON"
 cd "$LEXICONS_DIR"
 
 echo "==> gen-server → api/src/lexicon/"
-npx @atproto/lex-cli gen-server "$API_LEXICON" "${LEXICON_FILES[@]}"
+yes | npx @atproto/lex-cli gen-server "$API_LEXICON" "${LEXICON_FILES[@]}"
 
 echo "==> gen-api    → importers/src/lexicon/"
-npx @atproto/lex-cli gen-api "$IMPORTERS_LEXICON" "${LEXICON_FILES[@]}"
+yes | npx @atproto/lex-cli gen-api "$IMPORTERS_LEXICON" "${LEXICON_FILES[@]}"
 
 echo ""
 echo "✓ Lexicon codegen complete."

@@ -41,13 +41,13 @@ export function buildClientMetadata(serviceUrl: string) {
     client_name: 'crate.social',
     client_id: `${serviceUrl}/oauth-client-metadata.json`,
     jwks_uri: `${serviceUrl}/.well-known/jwks.json`,
-    redirect_uris: [`${serviceUrl}/oauth/callback`],
+    redirect_uris: [`${serviceUrl}/oauth/callback`] as [string, ...string[]],
     scope: CRATE_SCOPES,
-    grant_types: ['authorization_code', 'refresh_token'],
-    response_types: ['code'],
-    application_type: 'web',
+    grant_types: ['authorization_code', 'refresh_token'] as ['authorization_code', 'refresh_token'],
+    response_types: ['code'] as ['code'],
+    application_type: 'web' as const,
     // token_endpoint_auth_method set dynamically in oauth/index.ts
     // based on whether a private keyset is configured.
     dpop_bound_access_tokens: true,
-  } as const;
+  };
 }
