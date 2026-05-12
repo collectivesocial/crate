@@ -26,7 +26,16 @@ export const SESSION_OPTIONS = {
   password: config.COOKIE_SECRET,
   cookieOptions: {
     secure: config.NODE_ENV === 'production',
-    sameSite: 'lax' as const,
+    // In production the web app is on a different origin (GH Pages or a
+    // separate apex domain) from the API. Cross-site `fetch()` calls don't
+    // carry SameSite=Lax cookies, so the session cookie is silently dropped
+    // and every /api/* request returns 401. Use `none` in production so the
+    // cookie is sent on cross-site XHRs; this requires `secure: true`, which
+    // is already enabled above. In development we stay on `lax` to keep the
+    // local cookie behavior simple.
+    sameSite: (config.NODE_ENV === 'production' ? 'none' : 'lax') as
+      | 'none'
+      | 'lax',
     httpOnly: true,
     path: '/',
   },
