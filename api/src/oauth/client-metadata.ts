@@ -10,6 +10,11 @@
  *   crate can write and so a compromised crate token can't touch unrelated
  *   collections (e.g. app.bsky.feed.post).
  *
+ * - `blob:<mime>` — required for `com.atproto.repo.uploadBlob`. Each blob
+ *   scope is granular to a mime type / pattern. We grant the image types
+ *   declared as `accept` in our lexicons (content.image, document.coverImage,
+ *   making.project.coverImage).
+ *
  * Reads:
  *   - Profile (handle, avatar, displayName) is fetched from the unauthenticated
  *     public Bluesky AppView (https://public.api.bsky.app) — no scope needed.
@@ -18,7 +23,8 @@
  *     app.collectivesocial.*, community.lexicon.*, social.crate.* from other
  *     users) is unauthenticated — no scope needed.
  *
- * Adding a new lexicon to crate? Add its repo:<NSID> here.
+ * Adding a new lexicon to crate? Add its repo:<NSID> here. Adding a new
+ * accepted image mime type? Add a matching blob:<mime> below.
  *
  * Reference: open-social/src/middleware/auth.ts — OPENSOCIAL_SCOPES.
  */
@@ -36,6 +42,12 @@ export const CRATE_SCOPES = [
   'repo:community.lexicon.calendar.event',
   'repo:site.standard.document',
   'repo:site.standard.publication',
+  // Blob uploads — image mime types accepted by our lexicons.
+  'blob:image/jpeg',
+  'blob:image/png',
+  'blob:image/webp',
+  'blob:image/gif',
+  'blob:image/svg+xml',
 ].join(' ');
 
 /**

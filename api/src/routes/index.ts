@@ -1,5 +1,7 @@
 import { Application } from 'express';
 import type { AppContext } from '../context';
+import { createContentRouter } from './content';
+import { createDocumentsRouter } from './documents';
 import { createHealthRouter } from './health';
 import { createNotesRouter } from './notes';
 import { createOAuthRouter } from './oauth';
@@ -20,4 +22,6 @@ export function mountRoutes(app: Application, ctx: AppContext): void {
   // each other and don't collide with OAuth well-known paths.
   app.use('/api', createSessionRouter(ctx));
   app.use('/api', createNotesRouter(ctx));
+  app.use('/api', createDocumentsRouter(ctx));
+  app.use('/api', createContentRouter(ctx));
 }

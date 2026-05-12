@@ -14,6 +14,10 @@ export interface Main {
   $type: 'social.crate.now'
   /** Now page content in markdown. Describes what the author is currently doing, making, reading, or focused on. */
   body: string
+  /** Optional plain-text location (e.g., 'Vancouver, WA'). */
+  location?: string
+  /** Optional one-line summary for previews and feeds. */
+  summary?: string
   /** Timestamp when this now entry was written. The latest by this field is the current now page. */
   createdAt: string
   [k: string]: unknown

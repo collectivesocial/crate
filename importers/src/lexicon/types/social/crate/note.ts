@@ -20,6 +20,10 @@ export interface Main {
   body: string
   /** Freeform tags for categorizing and filtering notes. */
   tags?: string[]
+  /** Optional AT-URI of a parent social.crate.note. Used to build hierarchical note trees and breadcrumb navigation. A note without a parent is a root note. */
+  parent?: string
+  /** When true, the note is a private draft and should not be rendered publicly. The record still lives on the user's PDS — drafts are not deletion or hiding from the network, just a signal to rendering apps to skip the note. */
+  draft?: boolean
   /** The date this note is considered published. Controls public visibility ordering. */
   publishedAt: string
   /** Timestamp of the most recent edit to this note. */

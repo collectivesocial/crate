@@ -1,0 +1,21 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.repo.strongRef",
+  "description": "Vendored copy of com.atproto.repo.strongRef so other lexicons in this directory can reference it via `ref`. A strong ref binds a target record by both its AT-URI and CID.",
+  "defs": {
+    "main": {
+      "type": "object",
+      "required": ["uri", "cid"],
+      "properties": {
+        "uri": {
+          "type": "string",
+          "format": "at-uri"
+        },
+        "cid": {
+          "type": "string",
+          "format": "cid"
+        }
+      }
+    }
+  }
+}

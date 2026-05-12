@@ -10,33 +10,292 @@ import {
 import { type $Typed, is$typed, maybe$typed } from './util.js'
 
 export const schemaDict = {
-  SocialCrateIllustration: {
+  ComAtprotoRepoStrongRef: {
     lexicon: 1,
-    id: 'social.crate.illustration',
+    id: 'com.atproto.repo.strongRef',
+    description:
+      'Vendored copy of com.atproto.repo.strongRef so other lexicons in this directory can reference it via `ref`. A strong ref binds a target record by both its AT-URI and CID.',
+    defs: {
+      main: {
+        type: 'object',
+        required: ['uri', 'cid'],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+          cid: {
+            type: 'string',
+            format: 'cid',
+          },
+        },
+      },
+    },
+  },
+  CommunityLexiconCalendarEvent: {
+    lexicon: 1,
+    id: 'community.lexicon.calendar.event',
     defs: {
       main: {
         type: 'record',
-        description: 'A stick-figure illustration or piece of artwork.',
+        description:
+          "A calendar event. Stored in the author's PDS repo. Compatible with the Lexicon Community calendar event lexicon used by Smoke Signal and other ATProto event apps.",
         key: 'tid',
         record: {
           type: 'object',
-          required: ['caption', 'image', 'createdAt'],
+          required: ['name', 'createdAt'],
           properties: {
+            name: {
+              type: 'string',
+              maxLength: 256,
+              description: 'Human-readable event name.',
+            },
+            description: {
+              type: 'string',
+              maxLength: 2048,
+              description: 'Optional event description or agenda.',
+            },
+            startsAt: {
+              type: 'string',
+              format: 'datetime',
+              description: 'Event start date and time.',
+            },
+            endsAt: {
+              type: 'string',
+              format: 'datetime',
+              description: 'Event end date and time.',
+            },
+            mode: {
+              type: 'string',
+              knownValues: [
+                'community.lexicon.calendar.event#virtual',
+                'community.lexicon.calendar.event#inperson',
+                'community.lexicon.calendar.event#hybrid',
+              ],
+              description:
+                'Whether the event is virtual, in-person, or hybrid.',
+            },
+            status: {
+              type: 'string',
+              knownValues: [
+                'community.lexicon.calendar.event#scheduled',
+                'community.lexicon.calendar.event#cancelled',
+                'community.lexicon.calendar.event#postponed',
+              ],
+              description: 'Event status.',
+            },
+            locations: {
+              type: 'array',
+              description:
+                'Physical location(s) for in-person or hybrid events.',
+              items: {
+                type: 'ref',
+                ref: 'lex:community.lexicon.calendar.event#location',
+              },
+            },
+            uris: {
+              type: 'array',
+              description: 'Virtual meeting links or related URLs.',
+              items: {
+                type: 'ref',
+                ref: 'lex:community.lexicon.calendar.event#uri',
+              },
+            },
+            createdAt: {
+              type: 'string',
+              format: 'datetime',
+              description: 'Timestamp when this record was created.',
+            },
+          },
+        },
+      },
+      location: {
+        type: 'object',
+        description: 'Physical location for an event.',
+        properties: {
+          name: {
+            type: 'string',
+            maxLength: 256,
+            description: "Location name (e.g. 'Downtown Library').",
+          },
+          locality: {
+            type: 'string',
+            maxLength: 256,
+            description: 'City or locality.',
+          },
+          region: {
+            type: 'string',
+            maxLength: 256,
+            description: 'State or region.',
+          },
+          country: {
+            type: 'string',
+            maxLength: 256,
+            description: 'Country.',
+          },
+        },
+      },
+      uri: {
+        type: 'object',
+        description:
+          'A labeled URL associated with an event (e.g. a Zoom link, ticket page, or event website).',
+        required: ['uri'],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'uri',
+            description: 'URL (e.g. Zoom link, Google Meet link, event page).',
+          },
+          name: {
+            type: 'string',
+            maxLength: 256,
+            description:
+              "Label for the link (e.g. 'Zoom Meeting', 'Tickets', 'Event Page').",
+          },
+        },
+      },
+    },
+  },
+  SiteStandardDocument: {
+    lexicon: 1,
+    id: 'site.standard.document',
+    defs: {
+      main: {
+        type: 'record',
+        description:
+          'Vendored copy of the site.standard.document lexicon. A long-form document published on the web; may be standalone or part of a publication. Compatible with Offprint, Leaflet, pckt.blog, and other standard.site implementations. Source: https://standard.site/docs/lexicons/document/',
+        key: 'tid',
+        record: {
+          type: 'object',
+          required: ['site', 'title', 'publishedAt'],
+          properties: {
+            site: {
+              type: 'string',
+              format: 'uri',
+              description:
+                'Points to a publication record (at://) or a publication url (https://) for loose documents. Avoid trailing slashes.',
+            },
+            path: {
+              type: 'string',
+              description:
+                'Combine with site or publication url to construct a canonical URL to the document. Prepend with a leading slash.',
+            },
             title: {
               type: 'string',
-              maxGraphemes: 200,
-              maxLength: 2000,
-              description: 'Optional title for the illustration.',
+              maxLength: 5000,
+              maxGraphemes: 500,
+              description: 'Title of the document.',
             },
-            caption: {
+            description: {
               type: 'string',
-              maxGraphemes: 1000,
-              maxLength: 10000,
-              description: 'Caption or alt text describing the illustration.',
+              maxLength: 30000,
+              maxGraphemes: 3000,
+              description: 'A brief description or excerpt from the document.',
+            },
+            coverImage: {
+              type: 'blob',
+              description: 'Image to use for thumbnail or cover image.',
+              accept: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
+              maxSize: 1000000,
+            },
+            textContent: {
+              type: 'string',
+              description:
+                "Plaintext representation of the document's contents. Should not contain markdown or other formatting.",
+            },
+            bskyPostRef: {
+              type: 'ref',
+              ref: 'lex:com.atproto.repo.strongRef',
+              description:
+                'Strong reference to a Bluesky post. Useful to keep track of comments off-platform.',
+            },
+            tags: {
+              type: 'array',
+              description:
+                'Tags used to categorize the document. Avoid prepending tags with hashtags.',
+              items: {
+                type: 'string',
+                maxLength: 1280,
+                maxGraphemes: 128,
+              },
+            },
+            publishedAt: {
+              type: 'string',
+              format: 'datetime',
+              description: "Timestamp of the document's publish time.",
+            },
+            updatedAt: {
+              type: 'string',
+              format: 'datetime',
+              description: "Timestamp of the document's last edit.",
+            },
+          },
+        },
+      },
+    },
+  },
+  SocialCrateContent: {
+    lexicon: 1,
+    id: 'social.crate.content',
+    defs: {
+      main: {
+        type: 'record',
+        description:
+          'A unified record type for things the author has made: illustrations, articles, videos, talks, newsletters, podcasts. The kind field discriminates the variant; type-specific fields (media, event, series) are optional sub-objects. Long-form blog posts and newsletters whose body lives elsewhere (e.g., site.standard.document on Offprint) should use canonicalUrl rather than body.',
+        key: 'tid',
+        record: {
+          type: 'object',
+          required: ['kind', 'title', 'publishedAt', 'createdAt'],
+          properties: {
+            kind: {
+              type: 'string',
+              enum: [
+                'illustration',
+                'article',
+                'video',
+                'talk',
+                'newsletter',
+                'podcast',
+                'other',
+              ],
+              description:
+                'Discriminator for the content variant. Closed enum in v1; adding new kinds requires a lexicon update.',
+            },
+            title: {
+              type: 'string',
+              maxGraphemes: 300,
+              maxLength: 3000,
+              description: 'Plain-text title of the content.',
+            },
+            description: {
+              type: 'string',
+              maxGraphemes: 5000,
+              maxLength: 50000,
+              description:
+                'Short markdown summary, abstract, or caption. Appropriate for previews and feeds.',
+            },
+            body: {
+              type: 'string',
+              maxGraphemes: 100000,
+              maxLength: 1000000,
+              description:
+                'Full markdown content when this record holds the content itself. Omit when the content lives elsewhere (use canonicalUrl).',
+            },
+            publishedAt: {
+              type: 'string',
+              format: 'datetime',
+              description:
+                'When this piece of content was originally published.',
+            },
+            canonicalUrl: {
+              type: 'string',
+              format: 'uri',
+              description:
+                'Canonical URL where the content originally lives (e.g., a YouTube video, a github.blog article, a podcast episode page). When set, renderers should link readers to this URL as the primary destination.',
             },
             image: {
               type: 'blob',
-              description: 'The illustration image file.',
+              description: 'Cover image, illustration, or thumbnail.',
               accept: [
                 'image/jpeg',
                 'image/png',
@@ -46,23 +305,346 @@ export const schemaDict = {
               ],
               maxSize: 2000000,
             },
-            topic: {
-              type: 'string',
-              maxGraphemes: 200,
-              maxLength: 2000,
-              description: 'Subject or topic the illustration depicts.',
-            },
-            sourcePost: {
-              type: 'string',
-              format: 'at-uri',
+            tags: {
+              type: 'array',
               description:
-                'AT-URI of the post or note this illustration was originally created for, if any.',
+                'Freeform tags shared across all content kinds. Enables cross-kind filtering.',
+              maxLength: 30,
+              items: {
+                type: 'string',
+                maxGraphemes: 64,
+                maxLength: 640,
+              },
+            },
+            media: {
+              type: 'ref',
+              ref: 'lex:social.crate.content#media',
+              description:
+                'Type-specific media references (audio, video, slides, duration). Used by video, podcast, talk.',
+            },
+            event: {
+              type: 'ref',
+              ref: 'lex:social.crate.content#event',
+              description: 'Event metadata. Used by talk.',
+            },
+            series: {
+              type: 'ref',
+              ref: 'lex:social.crate.content#series',
+              description: 'Series metadata. Used by podcast, newsletter.',
+            },
+            createdAt: {
+              type: 'string',
+              format: 'datetime',
+              description:
+                "Timestamp when this record was first created in the user's PDS.",
+            },
+          },
+        },
+      },
+      media: {
+        type: 'object',
+        description:
+          'Type-specific media URLs and duration. All fields optional; populate whichever apply to the content kind.',
+        properties: {
+          audioUrl: {
+            type: 'string',
+            format: 'uri',
+            description: 'URL of an audio file (used by podcast).',
+          },
+          videoUrl: {
+            type: 'string',
+            format: 'uri',
+            description: 'URL of a video recording (used by video, talk).',
+          },
+          slidesUrl: {
+            type: 'string',
+            format: 'uri',
+            description: 'URL of a slide deck (used by talk).',
+          },
+          duration: {
+            type: 'integer',
+            minimum: 0,
+            description: 'Duration in seconds (used by video, podcast, talk).',
+          },
+        },
+      },
+      event: {
+        type: 'object',
+        description: 'Event metadata for a talk.',
+        required: ['name'],
+        properties: {
+          name: {
+            type: 'string',
+            maxGraphemes: 300,
+            maxLength: 3000,
+            description: 'Name of the conference or event.',
+          },
+          eventRef: {
+            type: 'string',
+            format: 'at-uri',
+            description:
+              'AT-URI of the community.lexicon.calendar.event record, if one exists.',
+          },
+          location: {
+            type: 'string',
+            maxGraphemes: 300,
+            maxLength: 3000,
+            description: "Human-readable event location (e.g., 'Seattle, WA').",
+          },
+          date: {
+            type: 'string',
+            format: 'datetime',
+            description: 'Event date and time.',
+          },
+        },
+      },
+      series: {
+        type: 'object',
+        description: 'Series metadata for a podcast or newsletter.',
+        required: ['name'],
+        properties: {
+          name: {
+            type: 'string',
+            maxGraphemes: 300,
+            maxLength: 3000,
+            description:
+              "Name of the show or publication (e.g., 'Overcommitted', 'The Balanced Engineer').",
+          },
+          episodeNumber: {
+            type: 'integer',
+            minimum: 0,
+            description: 'Episode or issue number within the series.',
+          },
+          season: {
+            type: 'integer',
+            minimum: 0,
+            description: 'Season number, if the series uses seasons.',
+          },
+          feedUrl: {
+            type: 'string',
+            format: 'uri',
+            description: 'Canonical RSS or Atom feed URL for the series.',
+          },
+        },
+      },
+    },
+  },
+  SocialCrateMakingProject: {
+    lexicon: 1,
+    id: 'social.crate.making.project',
+    defs: {
+      main: {
+        type: 'record',
+        description:
+          'A unified making/build project record covering fiber arts, code, site, garden, illustration sets, and other creative work.',
+        key: 'tid',
+        record: {
+          type: 'object',
+          required: ['title', 'kind', 'status', 'description', 'createdAt'],
+          properties: {
+            title: {
+              type: 'string',
+              maxGraphemes: 300,
+              maxLength: 3000,
+              description: 'Project title.',
+            },
+            kind: {
+              type: 'string',
+              maxLength: 32,
+              knownValues: [
+                'fiber',
+                'code',
+                'site',
+                'garden',
+                'illustration-set',
+                'other',
+              ],
+              description:
+                'Project category. Determines which kind-specific metadata block is relevant.',
+            },
+            status: {
+              type: 'string',
+              maxLength: 32,
+              knownValues: [
+                'planning',
+                'in-progress',
+                'finished',
+                'paused',
+                'abandoned',
+              ],
+              description: 'Current status of the project.',
+            },
+            description: {
+              type: 'string',
+              maxGraphemes: 10000,
+              maxLength: 100000,
+              description: 'Project description in markdown.',
+            },
+            startedAt: {
+              type: 'string',
+              format: 'datetime',
+              description: 'When work on the project began.',
+            },
+            finishedAt: {
+              type: 'string',
+              format: 'datetime',
+              description: 'When the project was completed or abandoned.',
+            },
+            links: {
+              type: 'array',
+              description: 'External links associated with the project.',
+              maxLength: 20,
+              items: {
+                type: 'ref',
+                ref: 'lex:social.crate.making.project#link',
+              },
+            },
+            coverImage: {
+              type: 'blob',
+              description: 'Optional cover image for the project.',
+              accept: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
+              maxSize: 2000000,
+            },
+            fiber: {
+              type: 'ref',
+              ref: 'lex:social.crate.making.project#fiber',
+              description:
+                "Fiber arts metadata. Only meaningful when kind is 'fiber'.",
+            },
+            code: {
+              type: 'ref',
+              ref: 'lex:social.crate.making.project#code',
+              description:
+                "Software project metadata. Only meaningful when kind is 'code'.",
+            },
+            site: {
+              type: 'ref',
+              ref: 'lex:social.crate.making.project#site',
+              description:
+                "Website project metadata. Only meaningful when kind is 'site'.",
+            },
+            garden: {
+              type: 'ref',
+              ref: 'lex:social.crate.making.project#garden',
+              description:
+                "Garden project metadata. Only meaningful when kind is 'garden'.",
             },
             createdAt: {
               type: 'string',
               format: 'datetime',
               description: 'Timestamp when this record was created.',
             },
+          },
+        },
+      },
+      link: {
+        type: 'object',
+        description: 'An external link associated with a project.',
+        required: ['url'],
+        properties: {
+          label: {
+            type: 'string',
+            maxGraphemes: 100,
+            maxLength: 1000,
+            description: 'Human-readable label for the link.',
+          },
+          url: {
+            type: 'string',
+            format: 'uri',
+            description: 'URL of the linked resource.',
+          },
+        },
+      },
+      fiber: {
+        type: 'object',
+        description: 'Fiber arts metadata.',
+        properties: {
+          pattern: {
+            type: 'string',
+            maxGraphemes: 200,
+            maxLength: 2000,
+            description: 'Pattern name or identifier.',
+          },
+          yarn: {
+            type: 'string',
+            maxGraphemes: 200,
+            maxLength: 2000,
+            description: 'Yarn name and colorway.',
+          },
+          hookSize: {
+            type: 'string',
+            maxLength: 32,
+            description: "Hook or needle size (e.g. '4.0mm', 'US G/6').",
+          },
+          ravelryUrl: {
+            type: 'string',
+            format: 'uri',
+            description: 'URL of the project on Ravelry.',
+          },
+        },
+      },
+      code: {
+        type: 'object',
+        description: 'Software project metadata.',
+        properties: {
+          repo: {
+            type: 'string',
+            format: 'uri',
+            description: 'URL of the source code repository.',
+          },
+          language: {
+            type: 'string',
+            maxLength: 64,
+            description: 'Primary programming language.',
+          },
+          deployedUrl: {
+            type: 'string',
+            format: 'uri',
+            description: 'URL of the live deployed project.',
+          },
+        },
+      },
+      site: {
+        type: 'object',
+        description: 'Website project metadata.',
+        properties: {
+          url: {
+            type: 'string',
+            format: 'uri',
+            description: 'Live URL of the site.',
+          },
+          role: {
+            type: 'string',
+            maxGraphemes: 100,
+            maxLength: 1000,
+            description:
+              "Your role on the project (e.g. 'designer', 'developer', 'owner').",
+          },
+        },
+      },
+      garden: {
+        type: 'object',
+        description: 'Garden project metadata.',
+        properties: {
+          bedNumber: {
+            type: 'string',
+            maxLength: 32,
+            description: 'Bed or plot identifier.',
+          },
+          plants: {
+            type: 'array',
+            maxLength: 100,
+            items: {
+              type: 'string',
+              maxGraphemes: 100,
+              maxLength: 1000,
+            },
+            description: 'List of plants in this bed or project.',
+          },
+          zone: {
+            type: 'string',
+            maxLength: 16,
+            description: "USDA hardiness zone (e.g. '7b').",
           },
         },
       },
@@ -157,6 +739,17 @@ export const schemaDict = {
                 maxLength: 640,
               },
             },
+            parent: {
+              type: 'string',
+              format: 'at-uri',
+              description:
+                'Optional AT-URI of a parent social.crate.note. Used to build hierarchical note trees and breadcrumb navigation. A note without a parent is a root note.',
+            },
+            draft: {
+              type: 'boolean',
+              description:
+                "When true, the note is a private draft and should not be rendered publicly. The record still lives on the user's PDS — drafts are not deletion or hiding from the network, just a signal to rendering apps to skip the note.",
+            },
             publishedAt: {
               type: 'string',
               format: 'datetime',
@@ -174,6 +767,87 @@ export const schemaDict = {
               description:
                 "Timestamp when this record was first created in the user's PDS.",
             },
+          },
+        },
+      },
+    },
+  },
+  SocialCrateNoteLink: {
+    lexicon: 1,
+    id: 'social.crate.note.link',
+    defs: {
+      main: {
+        type: 'record',
+        description:
+          'A directed link from one note to another ATProto record or external URL. Powers Zettelkasten backlinks and cross-lexicon connections. One record per link direction — the AppView computes the reverse for backlinks.',
+        key: 'tid',
+        record: {
+          type: 'object',
+          required: ['source', 'target', 'createdAt'],
+          properties: {
+            source: {
+              type: 'string',
+              format: 'at-uri',
+              description:
+                'AT-URI of the social.crate.note that contains this link.',
+            },
+            target: {
+              type: 'ref',
+              ref: 'lex:social.crate.note.link#target',
+              description: 'Link destination.',
+            },
+            context: {
+              type: 'string',
+              maxGraphemes: 1000,
+              maxLength: 10000,
+              description:
+                'The surrounding sentence, paragraph, or annotation that contains this link in the source note. Used for rich backlink previews.',
+            },
+            anchorText: {
+              type: 'string',
+              maxGraphemes: 300,
+              maxLength: 3000,
+              description:
+                'The visible link text or [[wikilink]] phrase as it appeared in the source note.',
+            },
+            createdAt: {
+              type: 'string',
+              format: 'datetime',
+              description: 'Timestamp when this link record was created.',
+            },
+          },
+        },
+      },
+      target: {
+        type: 'object',
+        description:
+          'Link destination. Exactly one of atUri or externalUrl should be set. atUri is preferred for federated records (notes, books, episodes, talks). externalUrl is used for external web resources or unresolved [[wikilinks]].',
+        properties: {
+          atUri: {
+            type: 'string',
+            format: 'at-uri',
+            description:
+              'AT-URI of the target record when the link resolves to an ATProto resource.',
+          },
+          externalUrl: {
+            type: 'string',
+            format: 'uri',
+            description:
+              'External URL when the target is outside the AT network (or the [[wikilink]] has not yet been resolved to a record).',
+          },
+          title: {
+            type: 'string',
+            maxGraphemes: 300,
+            maxLength: 3000,
+            description:
+              'Human-readable title of the link target, stored for display without requiring a round-trip.',
+          },
+          description: {
+            type: 'string',
+            maxGraphemes: 1000,
+            maxLength: 10000,
+            description:
+              'Optional short description or excerpt of the link target.',
           },
         },
       },
@@ -199,105 +873,24 @@ export const schemaDict = {
               description:
                 'Now page content in markdown. Describes what the author is currently doing, making, reading, or focused on.',
             },
+            location: {
+              type: 'string',
+              maxGraphemes: 300,
+              maxLength: 3000,
+              description:
+                "Optional plain-text location (e.g., 'Vancouver, WA').",
+            },
+            summary: {
+              type: 'string',
+              maxGraphemes: 300,
+              maxLength: 3000,
+              description: 'Optional one-line summary for previews and feeds.',
+            },
             createdAt: {
               type: 'string',
               format: 'datetime',
               description:
                 'Timestamp when this now entry was written. The latest by this field is the current now page.',
-            },
-          },
-        },
-      },
-    },
-  },
-  SocialCratePodcastEpisode: {
-    lexicon: 1,
-    id: 'social.crate.podcast.episode',
-    defs: {
-      main: {
-        type: 'record',
-        description:
-          'An individual podcast episode, typically imported from an RSS feed.',
-        key: 'tid',
-        record: {
-          type: 'object',
-          required: [
-            'title',
-            'description',
-            'audioUrl',
-            'showName',
-            'publishedAt',
-            'createdAt',
-          ],
-          properties: {
-            title: {
-              type: 'string',
-              maxGraphemes: 300,
-              maxLength: 3000,
-              description: 'Episode title.',
-            },
-            description: {
-              type: 'string',
-              maxGraphemes: 10000,
-              maxLength: 100000,
-              description:
-                'Episode description or show notes. May contain HTML or markdown depending on feed source.',
-            },
-            audioUrl: {
-              type: 'string',
-              format: 'uri',
-              description: 'Direct URL to the episode audio file.',
-            },
-            showName: {
-              type: 'string',
-              maxGraphemes: 200,
-              maxLength: 2000,
-              description: 'Name of the podcast show this episode belongs to.',
-            },
-            publishedAt: {
-              type: 'string',
-              format: 'datetime',
-              description:
-                'Original publication date of the episode as declared in the feed.',
-            },
-            duration: {
-              type: 'integer',
-              description: 'Episode duration in seconds.',
-              minimum: 0,
-            },
-            episodeNumber: {
-              type: 'integer',
-              description: 'Episode number within the season or show.',
-              minimum: 0,
-            },
-            season: {
-              type: 'integer',
-              description: 'Season number.',
-              minimum: 1,
-            },
-            guid: {
-              type: 'string',
-              maxLength: 2048,
-              description:
-                'Globally unique identifier from the RSS feed, used for deduplication.',
-            },
-            feedRef: {
-              type: 'string',
-              format: 'at-uri',
-              description:
-                'AT-URI of the social.crate.rss.feed record this episode was imported from.',
-            },
-            episodeUrl: {
-              type: 'string',
-              format: 'uri',
-              description:
-                'Canonical web page URL for the episode, if provided by the feed.',
-            },
-            createdAt: {
-              type: 'string',
-              format: 'datetime',
-              description:
-                "Timestamp when this record was created in the user's PDS.",
             },
           },
         },
@@ -399,10 +992,14 @@ export function validate(
 }
 
 export const ids = {
-  SocialCrateIllustration: 'social.crate.illustration',
+  ComAtprotoRepoStrongRef: 'com.atproto.repo.strongRef',
+  CommunityLexiconCalendarEvent: 'community.lexicon.calendar.event',
+  SiteStandardDocument: 'site.standard.document',
+  SocialCrateContent: 'social.crate.content',
+  SocialCrateMakingProject: 'social.crate.making.project',
   SocialCrateMakingUpdate: 'social.crate.making.update',
   SocialCrateNote: 'social.crate.note',
+  SocialCrateNoteLink: 'social.crate.note.link',
   SocialCrateNow: 'social.crate.now',
-  SocialCratePodcastEpisode: 'social.crate.podcast.episode',
   SocialCrateRssFeed: 'social.crate.rss.feed',
 } as const

@@ -63,6 +63,12 @@
             ],
             "maxSize": 2000000
           },
+          "imageAlt": {
+            "type": "string",
+            "maxGraphemes": 2000,
+            "maxLength": 20000,
+            "description": "Alt text describing the image for screen readers and renderers that need a text fallback."
+          },
           "tags": {
             "type": "array",
             "description": "Freeform tags shared across all content kinds. Enables cross-kind filtering.",
@@ -87,6 +93,11 @@
             "type": "ref",
             "ref": "#series",
             "description": "Series metadata. Used by podcast, newsletter."
+          },
+          "bskyPostRef": {
+            "type": "ref",
+            "ref": "com.atproto.repo.strongRef",
+            "description": "Strong reference to a Bluesky post. Useful for off-platform comments, or to crosslink an illustration / article / video / talk to its announcement post."
           },
           "createdAt": {
             "type": "string",
