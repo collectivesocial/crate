@@ -20,7 +20,12 @@ app.use(helmet());
 const allowedOrigins =
   config.NODE_ENV === 'production'
     ? ([config.CORS_ORIGIN].filter(Boolean) as string[])
-    : ['http://127.0.0.1:5173', 'http://localhost:5173', 'http://127.0.0.1:5175', 'http://localhost:5175'];
+    : [
+        'http://127.0.0.1:5173',
+        'http://localhost:5173',
+        'http://127.0.0.1:5175',
+        'http://localhost:5175',
+      ];
 
 app.use(
   cors({

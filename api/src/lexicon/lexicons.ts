@@ -261,6 +261,13 @@ export const schemaDict = {
               description:
                 'Discriminator for the content variant. Closed enum in v1; adding new kinds requires a lexicon update.',
             },
+            kindLabel: {
+              type: 'string',
+              maxGraphemes: 100,
+              maxLength: 1000,
+              description:
+                "Optional user-supplied label shown alongside the kind. Most useful when kind is 'other' to describe what the content actually is (e.g. 'zine', 'recipe', 'sticker pack'). Renderers should prefer this label when present and the kind is 'other'.",
+            },
             title: {
               type: 'string',
               maxGraphemes: 300,
@@ -305,6 +312,13 @@ export const schemaDict = {
               ],
               maxSize: 2000000,
             },
+            imageAlt: {
+              type: 'string',
+              maxGraphemes: 2000,
+              maxLength: 20000,
+              description:
+                'Alt text describing the image for screen readers and renderers that need a text fallback.',
+            },
             tags: {
               type: 'array',
               description:
@@ -331,6 +345,12 @@ export const schemaDict = {
               type: 'ref',
               ref: 'lex:social.crate.content#series',
               description: 'Series metadata. Used by podcast, newsletter.',
+            },
+            bskyPostRef: {
+              type: 'ref',
+              ref: 'lex:com.atproto.repo.strongRef',
+              description:
+                'Strong reference to a Bluesky post. Useful for off-platform comments, or to crosslink an illustration / article / video / talk to its announcement post.',
             },
             createdAt: {
               type: 'string',
@@ -864,14 +884,24 @@ export const schemaDict = {
         key: 'tid',
         record: {
           type: 'object',
-          required: ['body', 'createdAt'],
+          required: ['createdAt'],
           properties: {
             body: {
               type: 'string',
               maxGraphemes: 10000,
               maxLength: 100000,
               description:
-                'Now page content in markdown. Describes what the author is currently doing, making, reading, or focused on.',
+                'Optional headline markdown shown above any structured sections. Use this for a single unstructured statement, or leave it empty and supply sections instead.',
+            },
+            sections: {
+              type: 'array',
+              maxLength: 20,
+              description:
+                "Optional named sections (e.g. 'Professional', 'Personal') for organizing the now page beyond a single body. Order is preserved.",
+              items: {
+                type: 'ref',
+                ref: 'lex:social.crate.now#section',
+              },
             },
             location: {
               type: 'string',
@@ -892,6 +922,106 @@ export const schemaDict = {
               description:
                 'Timestamp when this now entry was written. The latest by this field is the current now page.',
             },
+          },
+        },
+      },
+      section: {
+        type: 'object',
+        description: 'A titled section of the now page. Body is markdown.',
+        required: ['title', 'body'],
+        properties: {
+          title: {
+            type: 'string',
+            maxGraphemes: 100,
+            maxLength: 1000,
+            description:
+              "Section heading (e.g. 'Professional', 'Personal', 'Reading').",
+          },
+          body: {
+            type: 'string',
+            maxGraphemes: 10000,
+            maxLength: 100000,
+            description: 'Section content in markdown.',
+          },
+        },
+      },
+    },
+  },
+  SocialCrateNowConfig: {
+    lexicon: 1,
+    id: 'social.crate.now.config',
+    defs: {
+      main: {
+        type: 'record',
+        description:
+          "Configuration for the author's now page. Singleton record with rkey 'self'. Configures which ATProto collections to query for 'recent items' panels alongside the latest social.crate.now entry.",
+        key: 'literal:self',
+        record: {
+          type: 'object',
+          required: ['createdAt'],
+          properties: {
+            liveFeeds: {
+              type: 'array',
+              maxLength: 20,
+              description:
+                "Ordered list of live feed panels to render alongside the now page. Each entry points at an ATProto collection on some author's PDS and pulls the most recent N records.",
+              items: {
+                type: 'ref',
+                ref: 'lex:social.crate.now.config#liveFeed',
+              },
+            },
+            createdAt: {
+              type: 'string',
+              format: 'datetime',
+              description: 'Timestamp when this config was first created.',
+            },
+            updatedAt: {
+              type: 'string',
+              format: 'datetime',
+              description: 'Timestamp of the most recent edit to this config.',
+            },
+          },
+        },
+      },
+      liveFeed: {
+        type: 'object',
+        description: 'A single live feed panel on the now page.',
+        required: ['title', 'collection'],
+        properties: {
+          title: {
+            type: 'string',
+            maxGraphemes: 200,
+            maxLength: 2000,
+            description:
+              "Display title for the panel (e.g. 'Recent Bluesky posts', 'In progress on Collective').",
+          },
+          did: {
+            type: 'string',
+            format: 'did',
+            description:
+              "Author DID to query. Defaults to the now page owner's own DID when omitted.",
+          },
+          collection: {
+            type: 'string',
+            format: 'nsid',
+            description:
+              "Collection NSID to read (e.g. 'app.bsky.feed.post', 'app.collectivesocial.feed.useritem', 'social.crate.content').",
+          },
+          limit: {
+            type: 'integer',
+            minimum: 1,
+            maximum: 50,
+            description: 'Number of most recent records to fetch (default 5).',
+          },
+          filter: {
+            type: 'string',
+            knownValues: [
+              'social.crate.now.config#topLevelPosts',
+              'social.crate.now.config#noReplies',
+              'social.crate.now.config#noReposts',
+            ],
+            description:
+              "Optional renderer-side filter. 'topLevelPosts' (alias 'noReplies') drops app.bsky.feed.post records that have a reply field. 'noReposts' drops repost records when present.",
           },
         },
       },
@@ -1001,5 +1131,6 @@ export const ids = {
   SocialCrateNote: 'social.crate.note',
   SocialCrateNoteLink: 'social.crate.note.link',
   SocialCrateNow: 'social.crate.now',
+  SocialCrateNowConfig: 'social.crate.now.config',
   SocialCrateRssFeed: 'social.crate.rss.feed',
 } as const

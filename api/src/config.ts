@@ -13,15 +13,26 @@ const url = makeValidator<string>((input) => {
 });
 
 export const config = cleanEnv(process.env, {
-  NODE_ENV: str({ choices: ['development', 'production', 'test'], default: 'development' }),
+  NODE_ENV: str({
+    choices: ['development', 'production', 'test'],
+    default: 'development',
+  }),
   PORT: port({ default: 3000 }),
-  LOG_LEVEL: str({ choices: ['trace', 'debug', 'info', 'warn', 'error', 'fatal'], default: 'info' }),
+  LOG_LEVEL: str({
+    choices: ['trace', 'debug', 'info', 'warn', 'error', 'fatal'],
+    default: 'info',
+  }),
 
-  DATABASE_URL: str({ docs: 'Postgres connection string, e.g. postgresql://user:pass@localhost:5432/crate' }),
+  DATABASE_URL: str({
+    docs: 'Postgres connection string, e.g. postgresql://user:pass@localhost:5432/crate',
+  }),
 
   // OAuth — ATProto confidential client.
   // In local dev, SERVICE_URL may be omitted; loopback mode is used automatically.
-  SERVICE_URL: str({ default: '', docs: 'Public URL of this API, used in OAuth client_id and redirect_uri' }),
+  SERVICE_URL: str({
+    default: '',
+    docs: 'Public URL of this API, used in OAuth client_id and redirect_uri',
+  }),
   PLC_URL: str({ default: 'https://plc.directory' }),
   PDS_URL: str({ default: 'https://bsky.social' }),
   // JSON array of JWK private keys for confidential-client request signing.

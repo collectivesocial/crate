@@ -31,7 +31,10 @@ export async function hasBeenImported(_hash: ContentHash): Promise<boolean> {
   return false;
 }
 
-export async function markImported(_hash: ContentHash, _atUri: string): Promise<void> {
+export async function markImported(
+  _hash: ContentHash,
+  _atUri: string
+): Promise<void> {
   // TODO: write to .import-state.json or record on PDS
 }
 

@@ -14,9 +14,16 @@ export function isDryRun(flag: boolean): boolean {
  * Guard: call before any PDS write or state mutation.
  * Logs the record that *would* be written and returns false so callers can skip.
  */
-export function guardDryRun(dryRun: boolean, label: string, record: unknown): boolean {
+export function guardDryRun(
+  dryRun: boolean,
+  label: string,
+  record: unknown
+): boolean {
   if (dryRun) {
-    console.log(`[dry-run] would write ${label}:`, JSON.stringify(record, null, 2));
+    console.log(
+      `[dry-run] would write ${label}:`,
+      JSON.stringify(record, null, 2)
+    );
     return true;
   }
   return false;

@@ -1,6 +1,11 @@
 #!/usr/bin/env tsx
 import { Pool } from 'pg';
-import { Kysely, Migrator, PostgresDialect, FileMigrationProvider } from 'kysely';
+import {
+  Kysely,
+  Migrator,
+  PostgresDialect,
+  FileMigrationProvider,
+} from 'kysely';
 import * as path from 'path';
 import * as fs from 'fs/promises';
 import * as dotenv from 'dotenv';
@@ -35,9 +40,15 @@ async function migrateToLatest() {
 
   results?.forEach((it) => {
     if (it.status === 'Success') {
-      logger.info({ migrationName: it.migrationName }, `Migration "${it.migrationName}" executed successfully`);
+      logger.info(
+        { migrationName: it.migrationName },
+        `Migration "${it.migrationName}" executed successfully`
+      );
     } else if (it.status === 'Error') {
-      logger.error({ migrationName: it.migrationName }, `Failed to execute migration "${it.migrationName}"`);
+      logger.error(
+        { migrationName: it.migrationName },
+        `Failed to execute migration "${it.migrationName}"`
+      );
     }
   });
 
@@ -71,9 +82,15 @@ async function migrateDown() {
 
   results?.forEach((it) => {
     if (it.status === 'Success') {
-      logger.info({ migrationName: it.migrationName }, `Rollback "${it.migrationName}" executed successfully`);
+      logger.info(
+        { migrationName: it.migrationName },
+        `Rollback "${it.migrationName}" executed successfully`
+      );
     } else if (it.status === 'Error') {
-      logger.error({ migrationName: it.migrationName }, `Failed to rollback migration "${it.migrationName}"`);
+      logger.error(
+        { migrationName: it.migrationName },
+        `Failed to rollback migration "${it.migrationName}"`
+      );
     }
   });
 
@@ -136,7 +153,9 @@ const command = process.argv[2];
         await getMigrationStatus();
         break;
       default:
-        console.log('Usage: npm run migrate:up | npm run migrate:down | npm run migrate:status');
+        console.log(
+          'Usage: npm run migrate:up | npm run migrate:down | npm run migrate:status'
+        );
         process.exit(1);
     }
   } catch (error) {

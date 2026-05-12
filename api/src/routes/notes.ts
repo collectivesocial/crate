@@ -36,7 +36,10 @@ const noteInputSchema = z.object({
 
 type NoteInput = z.infer<typeof noteInputSchema>;
 
-function buildRecord(input: NoteInput, opts: { updatedAt?: string; createdAt: string }) {
+function buildRecord(
+  input: NoteInput,
+  opts: { updatedAt?: string; createdAt: string }
+) {
   const record: Record<string, unknown> = {
     $type: COLLECTION,
     title: input.title,
@@ -56,7 +59,10 @@ function buildRecord(input: NoteInput, opts: { updatedAt?: string; createdAt: st
  * Resolve a DID to a usable read-only Agent. Reads the DID document from the
  * PLC directory (or did:web) to find the user's PDS service endpoint.
  */
-async function resolvePublicAgent(did: string, ctx: AppContext): Promise<Agent> {
+async function resolvePublicAgent(
+  did: string,
+  ctx: AppContext
+): Promise<Agent> {
   // NodeOAuthClient exposes the identity resolver via `.didResolver` at
   // runtime, but the public type doesn't include it. Cast for access.
   const resolver = (
@@ -97,7 +103,8 @@ export function createNotesRouter(ctx: AppContext) {
         Math.max(parseInt((req.query.limit as string) ?? '50', 10) || 50, 1),
         100
       );
-      const cursor = typeof req.query.cursor === 'string' ? req.query.cursor : undefined;
+      const cursor =
+        typeof req.query.cursor === 'string' ? req.query.cursor : undefined;
 
       try {
         const response = await agent.com.atproto.repo.listRecords({
@@ -311,7 +318,8 @@ export function createNotesRouter(ctx: AppContext) {
         Math.max(parseInt((req.query.limit as string) ?? '50', 10) || 50, 1),
         100
       );
-      const cursor = typeof req.query.cursor === 'string' ? req.query.cursor : undefined;
+      const cursor =
+        typeof req.query.cursor === 'string' ? req.query.cursor : undefined;
 
       try {
         const agent = await resolvePublicAgent(did, ctx);

@@ -7,16 +7,17 @@ const nodeEnv = process.env.NODE_ENV || 'development';
 
 export const logger = pino({
   level,
-  transport: nodeEnv === 'development'
-    ? {
-        target: 'pino-pretty',
-        options: {
-          colorize: true,
-          translateTime: 'HH:MM:ss Z',
-          ignore: 'pid,hostname',
-        },
-      }
-    : undefined,
+  transport:
+    nodeEnv === 'development'
+      ? {
+          target: 'pino-pretty',
+          options: {
+            colorize: true,
+            translateTime: 'HH:MM:ss Z',
+            ignore: 'pid,hostname',
+          },
+        }
+      : undefined,
 });
 
 export function createLogger(context: Record<string, unknown>) {

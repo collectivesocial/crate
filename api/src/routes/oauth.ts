@@ -102,7 +102,8 @@ export function createOAuthRouter(ctx: AppContext) {
           }
         }
 
-        const { session: oauthSession } = await ctx.oauthClient.callback(params);
+        const { session: oauthSession } =
+          await ctx.oauthClient.callback(params);
         session.did = oauthSession.did;
         await session.save();
       } catch (err) {

@@ -23,14 +23,20 @@ import { buildClientMetadata, CRATE_SCOPES } from './client-metadata';
 
 export { CRATE_SCOPES };
 
-export async function createOAuthClient(db: Kysely<Database>): Promise<NodeOAuthClient> {
-  const privateKeys: unknown[] = config.PRIVATE_KEYS ? JSON.parse(config.PRIVATE_KEYS) : [];
+export async function createOAuthClient(
+  db: Kysely<Database>
+): Promise<NodeOAuthClient> {
+  const privateKeys: unknown[] = config.PRIVATE_KEYS
+    ? JSON.parse(config.PRIVATE_KEYS)
+    : [];
 
   const keyset =
     config.SERVICE_URL && privateKeys.length > 0
       ? new Keyset(
           await Promise.all(
-            privateKeys.map((jwk) => JoseKey.fromJWK(jwk as Record<string, unknown>))
+            privateKeys.map((jwk) =>
+              JoseKey.fromJWK(jwk as Record<string, unknown>)
+            )
           )
         )
       : undefined;
@@ -55,7 +61,10 @@ export async function createOAuthClient(db: Kysely<Database>): Promise<NodeOAuth
         ])}`
       );
 
-  logger.info({ mode: config.SERVICE_URL ? 'confidential' : 'loopback' }, 'Creating OAuth client');
+  logger.info(
+    { mode: config.SERVICE_URL ? 'confidential' : 'loopback' },
+    'Creating OAuth client'
+  );
 
   return new NodeOAuthClient({
     keyset,

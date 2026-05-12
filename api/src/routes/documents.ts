@@ -81,7 +81,9 @@ async function resolveBskyPostRef(
   let repo: string = authedDid;
 
   // bsky.app URL
-  const url = trimmed.match(/^https?:\/\/[^/]+\/profile\/([^/]+)\/post\/([^/?#]+)/i);
+  const url = trimmed.match(
+    /^https?:\/\/[^/]+\/profile\/([^/]+)\/post\/([^/?#]+)/i
+  );
   if (url) {
     repo = url[1];
     rkey = url[2];
@@ -139,7 +141,8 @@ export function createDocumentsRouter(ctx: AppContext) {
         Math.max(parseInt((req.query.limit as string) ?? '50', 10) || 50, 1),
         100
       );
-      const cursor = typeof req.query.cursor === 'string' ? req.query.cursor : undefined;
+      const cursor =
+        typeof req.query.cursor === 'string' ? req.query.cursor : undefined;
 
       try {
         const response = await agent.com.atproto.repo.listRecords({
@@ -233,9 +236,11 @@ export function createDocumentsRouter(ctx: AppContext) {
           collection: COLLECTION,
           record: record as Record<string, unknown>,
         });
-        return res
-          .status(201)
-          .json({ uri: response.data.uri, cid: response.data.cid, value: record });
+        return res.status(201).json({
+          uri: response.data.uri,
+          cid: response.data.cid,
+          value: record,
+        });
       } catch (err) {
         ctx.logger.error({ err }, 'create document failed');
         return res.status(500).json({ error: 'Failed to create document' });
@@ -265,7 +270,8 @@ export function createDocumentsRouter(ctx: AppContext) {
       }
 
       // Preserve original publishedAt if the record already exists; bump updatedAt.
-      let publishedAt: string = parsed.data.publishedAt ?? new Date().toISOString();
+      let publishedAt: string =
+        parsed.data.publishedAt ?? new Date().toISOString();
       try {
         const existing = await agent.com.atproto.repo.getRecord({
           repo: agent.did,
@@ -367,7 +373,8 @@ export function createDocumentsRouter(ctx: AppContext) {
         Math.max(parseInt((req.query.limit as string) ?? '25', 10) || 25, 1),
         100
       );
-      const cursor = typeof req.query.cursor === 'string' ? req.query.cursor : undefined;
+      const cursor =
+        typeof req.query.cursor === 'string' ? req.query.cursor : undefined;
 
       try {
         const response = await agent.com.atproto.repo.listRecords({

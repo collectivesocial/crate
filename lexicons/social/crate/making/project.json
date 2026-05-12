@@ -19,13 +19,26 @@
           "kind": {
             "type": "string",
             "maxLength": 32,
-            "knownValues": ["fiber", "code", "site", "garden", "illustration-set", "other"],
+            "knownValues": [
+              "fiber",
+              "code",
+              "site",
+              "garden",
+              "illustration-set",
+              "other"
+            ],
             "description": "Project category. Determines which kind-specific metadata block is relevant."
           },
           "status": {
             "type": "string",
             "maxLength": 32,
-            "knownValues": ["planning", "in-progress", "finished", "paused", "abandoned"],
+            "knownValues": [
+              "planning",
+              "in-progress",
+              "finished",
+              "paused",
+              "abandoned"
+            ],
             "description": "Current status of the project."
           },
           "description": {

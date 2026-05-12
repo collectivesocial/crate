@@ -62,7 +62,10 @@ export function buildClientMetadata(serviceUrl: string) {
     jwks_uri: `${serviceUrl}/.well-known/jwks.json`,
     redirect_uris: [`${serviceUrl}/oauth/callback`] as [string, ...string[]],
     scope: CRATE_SCOPES,
-    grant_types: ['authorization_code', 'refresh_token'] as ['authorization_code', 'refresh_token'],
+    grant_types: ['authorization_code', 'refresh_token'] as [
+      'authorization_code',
+      'refresh_token',
+    ],
     response_types: ['code'] as ['code'],
     application_type: 'web' as const,
     // token_endpoint_auth_method set dynamically in oauth/index.ts

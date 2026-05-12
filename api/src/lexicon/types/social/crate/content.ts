@@ -5,6 +5,7 @@ import { type ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import { validate as _validate } from '../../../lexicons'
 import { type $Typed, is$typed as _is$typed, type OmitKey } from '../../../util'
+import type * as ComAtprotoRepoStrongRef from '../../com/atproto/repo/strongRef.js'
 
 const is$typed = _is$typed,
   validate = _validate
@@ -21,6 +22,8 @@ export interface Main {
     | 'newsletter'
     | 'podcast'
     | 'other'
+  /** Optional user-supplied label shown alongside the kind. Most useful when kind is 'other' to describe what the content actually is (e.g. 'zine', 'recipe', 'sticker pack'). Renderers should prefer this label when present and the kind is 'other'. */
+  kindLabel?: string
   /** Plain-text title of the content. */
   title: string
   /** Short markdown summary, abstract, or caption. Appropriate for previews and feeds. */
@@ -33,11 +36,14 @@ export interface Main {
   canonicalUrl?: string
   /** Cover image, illustration, or thumbnail. */
   image?: BlobRef
+  /** Alt text describing the image for screen readers and renderers that need a text fallback. */
+  imageAlt?: string
   /** Freeform tags shared across all content kinds. Enables cross-kind filtering. */
   tags?: string[]
   media?: Media
   event?: Event
   series?: Series
+  bskyPostRef?: ComAtprotoRepoStrongRef.Main
   /** Timestamp when this record was first created in the user's PDS. */
   createdAt: string
   [k: string]: unknown

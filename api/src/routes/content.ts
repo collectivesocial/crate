@@ -113,7 +113,8 @@ export function createContentRouter(ctx: AppContext) {
         Math.max(parseInt((req.query.limit as string) ?? '50', 10) || 50, 1),
         100
       );
-      const cursor = typeof req.query.cursor === 'string' ? req.query.cursor : undefined;
+      const cursor =
+        typeof req.query.cursor === 'string' ? req.query.cursor : undefined;
       const kindFilter =
         typeof req.query.kind === 'string' ? req.query.kind : undefined;
 
@@ -213,9 +214,11 @@ export function createContentRouter(ctx: AppContext) {
           collection: COLLECTION,
           record: record as Record<string, unknown>,
         });
-        return res
-          .status(201)
-          .json({ uri: response.data.uri, cid: response.data.cid, value: record });
+        return res.status(201).json({
+          uri: response.data.uri,
+          cid: response.data.cid,
+          value: record,
+        });
       } catch (err) {
         ctx.logger.error({ err }, 'create content failed');
         return res.status(500).json({ error: 'Failed to create content' });
@@ -260,7 +263,8 @@ export function createContentRouter(ctx: AppContext) {
         if (v?.createdAt) createdAt = v.createdAt;
         // If the editor passed a new publishedAt, honor it; otherwise keep
         // whatever was previously stored.
-        if (!parsed.data.publishedAt && v?.publishedAt) publishedAt = v.publishedAt;
+        if (!parsed.data.publishedAt && v?.publishedAt)
+          publishedAt = v.publishedAt;
       } catch {
         // Doesn't exist yet — putRecord creates it. Keep the new timestamps.
       }
@@ -344,9 +348,9 @@ export function createContentRouter(ctx: AppContext) {
 
       const mime = req.headers['content-type']?.toString().split(';')[0].trim();
       if (!mime || !ALLOWED_IMAGE_MIME.has(mime)) {
-        return res
-          .status(415)
-          .json({ error: 'Unsupported image type. Use jpeg, png, webp, gif, or svg.' });
+        return res.status(415).json({
+          error: 'Unsupported image type. Use jpeg, png, webp, gif, or svg.',
+        });
       }
 
       const body = req.body as Buffer | undefined;

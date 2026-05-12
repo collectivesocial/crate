@@ -119,12 +119,14 @@ export class SocialCrateNS {
   _server: Server
   making: SocialCrateMakingNS
   note: SocialCrateNoteNS
+  now: SocialCrateNowNS
   rss: SocialCrateRssNS
 
   constructor(server: Server) {
     this._server = server
     this.making = new SocialCrateMakingNS(server)
     this.note = new SocialCrateNoteNS(server)
+    this.now = new SocialCrateNowNS(server)
     this.rss = new SocialCrateRssNS(server)
   }
 }
@@ -138,6 +140,14 @@ export class SocialCrateMakingNS {
 }
 
 export class SocialCrateNoteNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+}
+
+export class SocialCrateNowNS {
   _server: Server
 
   constructor(server: Server) {

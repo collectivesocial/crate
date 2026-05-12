@@ -33,27 +33,27 @@ Crate is generic enough to be useful to others. You're shipping it as a service,
 
 All Crate-defined lexicons live under the `social.crate.*` namespace. A vendored copy of the `community.lexicon.calendar.event` lexicon is also kept under `lexicons/community/lexicon/calendar/` so Crate can validate and create event records directly.
 
-| NSID | Purpose |
-|---|---|
-| `social.crate.rss.feed` | A subscribed RSS feed with a configured destination lexicon |
-| `social.crate.content` | Unified record for illustrations, articles, videos, talks, newsletters, and podcasts (discriminated by `kind`) |
-| `social.crate.making.project` | Unified project record (fiber, code, site, garden, illustration-set, other) |
-| `social.crate.making.update` | Sub-document attached to a project (progress logs, garden journal entries) |
-| `social.crate.note` | PKM/Zettelkasten markdown note |
-| `social.crate.note.link` | Federated link/backlink between notes and any AT-URI or external URL |
-| `social.crate.now` | Now-page update (append-only stream; latest is current) |
+| NSID                               | Purpose                                                                                                          |
+| ---------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `social.crate.rss.feed`            | A subscribed RSS feed with a configured destination lexicon                                                      |
+| `social.crate.content`             | Unified record for illustrations, articles, videos, talks, newsletters, and podcasts (discriminated by `kind`)   |
+| `social.crate.making.project`      | Unified project record (fiber, code, site, garden, illustration-set, other)                                      |
+| `social.crate.making.update`       | Sub-document attached to a project (progress logs, garden journal entries)                                       |
+| `social.crate.note`                | PKM/Zettelkasten markdown note                                                                                   |
+| `social.crate.note.link`           | Federated link/backlink between notes and any AT-URI or external URL                                             |
+| `social.crate.now`                 | Now-page update (append-only stream; latest is current)                                                          |
 | `community.lexicon.calendar.event` | Calendar event, vendored for in-Crate event creation. Compatible with Smoke Signal and other ATProto event apps. |
 
 External lexicons Crate reads from or links to:
 
-| NSID | Source |
-|---|---|
-| `site.standard.document` | Blog/newsletter content (Offprint publishes against this lexicon family) |
-| `site.standard.publication` | The publication metadata for your blog/newsletter |
-| `community.lexicon.calendar.rsvp` | Your RSVPs (verify exact NSID before implementing) |
-| `app.collectivesocial.list`[1] | Shared lists (including book clubs) in Collective |
-| `app.collectivesocial.listitem`[1] | Items in Collective lists |
-| `app.bsky.feed.post` | Bluesky posts |
+| NSID                               | Source                                                                   |
+| ---------------------------------- | ------------------------------------------------------------------------ |
+| `site.standard.document`           | Blog/newsletter content (Offprint publishes against this lexicon family) |
+| `site.standard.publication`        | The publication metadata for your blog/newsletter                        |
+| `community.lexicon.calendar.rsvp`  | Your RSVPs (verify exact NSID before implementing)                       |
+| `app.collectivesocial.list`[1]     | Shared lists (including book clubs) in Collective                        |
+| `app.collectivesocial.listitem`[1] | Items in Collective lists                                                |
+| `app.bsky.feed.post`               | Bluesky posts                                                            |
 
 > **Lexicon consolidation (2026-05-12):** The earlier per-format lexicons `social.crate.illustration`, `social.crate.talk`, and `social.crate.podcast.episode` were replaced by the single `social.crate.content` record type with a `kind` discriminator. Renderers switch on `kind` and the optional `media` / `event` / `series` sub-objects to produce the appropriate display.
 
@@ -62,9 +62,10 @@ External lexicons Crate reads from or links to:
 ## Footnotes
 
 [1] **Verified Collective NSIDs (2026-05-09):** The Collective app uses the `app.collectivesocial.*` namespace (NOT `app.collective.*`). Complete catalog verified from `/Users/brittanyellich/Documents/Code/Collective/collective-social-api/lexicons/`:
-  - **Books/Lists:** `app.collectivesocial.list` (has `purpose: "book-club"`) and `app.collectivesocial.listitem`
-  - Other record types: `app.collectivesocial.group.list`, `app.collectivesocial.feed.list`, `app.collectivesocial.feed.review`, and 16+ related types (feed comments, completions, goals, reactions, progress tracking, etc.)
-  - Note: `social.crate.note.link`'s flat `target` object (with optional `atUri` or `externalUrl`) can safely reference Collective list records via AT-URI when needed; no schema changes required.
+
+- **Books/Lists:** `app.collectivesocial.list` (has `purpose: "book-club"`) and `app.collectivesocial.listitem`
+- Other record types: `app.collectivesocial.group.list`, `app.collectivesocial.feed.list`, `app.collectivesocial.feed.review`, and 16+ related types (feed comments, completions, goals, reactions, progress tracking, etc.)
+- Note: `social.crate.note.link`'s flat `target` object (with optional `atUri` or `externalUrl`) can safely reference Collective list records via AT-URI when needed; no schema changes required.
 
 ---
 
@@ -100,8 +101,8 @@ Unified record type for illustrations, articles, videos, talks, newsletters, and
   "canonicalUrl": "<uri, optional — where the content originally lives>",
   "image": "<blob ref, optional — cover/thumbnail/illustration>",
   "tags": "<array of strings, optional>",
-  "media":  "<optional object: { audioUrl?, videoUrl?, slidesUrl?, duration? } — for video/podcast/talk>",
-  "event":  "<optional object: { name, eventRef?, location?, date? } — for talk>",
+  "media": "<optional object: { audioUrl?, videoUrl?, slidesUrl?, duration? } — for video/podcast/talk>",
+  "event": "<optional object: { name, eventRef?, location?, date? } — for talk>",
   "series": "<optional object: { name, episodeNumber?, season?, feedUrl? } — for podcast/newsletter>",
   "createdAt": "<datetime, required>"
 }
@@ -125,9 +126,9 @@ Render rules of thumb:
   "finishedAt": "<datetime, optional>",
   "links": "<array of #link { label?, url }>",
   "coverImage": "<blob ref, optional>",
-  "fiber":  "<optional #fiber: { pattern, yarn, hookSize, ravelryUrl }>",
-  "code":   "<optional #code: { repo, language, deployedUrl }>",
-  "site":   "<optional #site: { url, role }>",
+  "fiber": "<optional #fiber: { pattern, yarn, hookSize, ravelryUrl }>",
+  "code": "<optional #code: { repo, language, deployedUrl }>",
+  "site": "<optional #site: { url, role }>",
   "garden": "<optional #garden: { bedNumber, plants[], zone }>",
   "createdAt": "<datetime, required>"
 }
@@ -194,11 +195,11 @@ Standard Lexicon Community event shape, vendored under `lexicons/community/lexic
   "name": "<required>",
   "description": "<optional>",
   "startsAt": "<datetime, optional>",
-  "endsAt":   "<datetime, optional>",
-  "mode":   "<knownValues: #virtual | #inperson | #hybrid>",
+  "endsAt": "<datetime, optional>",
+  "mode": "<knownValues: #virtual | #inperson | #hybrid>",
   "status": "<knownValues: #scheduled | #cancelled | #postponed>",
   "locations": "<array of #location { name?, locality?, region?, country? }>",
-  "uris":      "<array of #uri { uri, name? }>",
+  "uris": "<array of #uri { uri, name? }>",
   "createdAt": "<datetime, required>"
 }
 ```
@@ -321,7 +322,7 @@ That third point is the moment the demo works. It's the one thing only ATProto c
 4. **Lexicon stewardship.** `social.crate.*` is your namespace. Are these "Brittany's lexicons" or "Crate's lexicons that anyone can use and propose changes to"? If the latter, set up a public process (GitHub repo with proposals/discussions) before show day so it's visible.
 5. **Talks ↔ events linkage.** The talk lexicon has an optional `eventRef`. Will you manually link these post-hoc, or auto-link via name matching? Manual is fine for v1.
 6. **RSVP and upcoming events display.** Querying your own RSVPs to show "events I'm registered for" needs either: (a) Smoke Signal's API, (b) querying your own PDS for RSVP records, or (c) firehose listening. (b) is the most independent. Confirm which is feasible.
-7. **Naming for the digital-garden product.** Crate is the service. Is the digital-garden web app *part of* Crate (`crate.social/notes`), or its own thing (`yourgarden.example`) that uses Crate's lexicons? This is mostly a marketing question.
+7. **Naming for the digital-garden product.** Crate is the service. Is the digital-garden web app _part of_ Crate (`crate.social/notes`), or its own thing (`yourgarden.example`) that uses Crate's lexicons? This is mostly a marketing question.
 
 ---
 

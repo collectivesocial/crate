@@ -9,7 +9,7 @@ services:
     ports:
       # Host port 5434 → container 5432 to avoid collision with
       # collective-social-api (5432) and atproto devnet (5433).
-      - "5434:5432"
+      - '5434:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
 

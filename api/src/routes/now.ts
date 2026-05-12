@@ -58,7 +58,8 @@ function buildNowRecord(input: NowInput, createdAt: string) {
     createdAt,
   };
   if (input.body && input.body.trim()) record.body = input.body;
-  if (input.sections && input.sections.length > 0) record.sections = input.sections;
+  if (input.sections && input.sections.length > 0)
+    record.sections = input.sections;
   if (input.location) record.location = input.location;
   if (input.summary) record.summary = input.summary;
   return record;
@@ -68,7 +69,10 @@ function buildNowRecord(input: NowInput, createdAt: string) {
  * Resolve a DID to a usable read-only Agent. Used by the live-feed endpoint
  * so callers can pull records from any author's PDS.
  */
-async function resolvePublicAgent(did: string, ctx: AppContext): Promise<Agent> {
+async function resolvePublicAgent(
+  did: string,
+  ctx: AppContext
+): Promise<Agent> {
   const resolver = (
     ctx.oauthClient as unknown as {
       didResolver: { resolve(did: string): Promise<{ service?: unknown }> };
@@ -135,7 +139,8 @@ export function createNowRouter(ctx: AppContext) {
         Math.max(parseInt((req.query.limit as string) ?? '25', 10) || 25, 1),
         100
       );
-      const cursor = typeof req.query.cursor === 'string' ? req.query.cursor : undefined;
+      const cursor =
+        typeof req.query.cursor === 'string' ? req.query.cursor : undefined;
       try {
         const response = await agent.com.atproto.repo.listRecords({
           repo: agent.did,
@@ -169,9 +174,10 @@ export function createNowRouter(ctx: AppContext) {
       }
       const parsed = nowInputSchema.safeParse(req.body);
       if (!parsed.success) {
-        return res
-          .status(400)
-          .json({ error: 'Invalid now entry', details: parsed.error.flatten() });
+        return res.status(400).json({
+          error: 'Invalid now entry',
+          details: parsed.error.flatten(),
+        });
       }
       const now = new Date().toISOString();
       const record = buildNowRecord(parsed.data, now);
@@ -190,9 +196,11 @@ export function createNowRouter(ctx: AppContext) {
           collection: NOW_COLLECTION,
           record: record as Record<string, unknown>,
         });
-        return res
-          .status(201)
-          .json({ uri: response.data.uri, cid: response.data.cid, value: record });
+        return res.status(201).json({
+          uri: response.data.uri,
+          cid: response.data.cid,
+          value: record,
+        });
       } catch (err) {
         ctx.logger.error({ err }, 'create now failed');
         return res.status(500).json({ error: 'Failed to create now entry' });
@@ -247,7 +255,7 @@ export function createNowRouter(ctx: AppContext) {
       }
 
       // Preserve createdAt across edits.
-      let createdAt = new Date().toISOString();
+      let createdAt: string = new Date().toISOString();
       try {
         const existing = await agent.com.atproto.repo.getRecord({
           repo: agent.did,
@@ -285,7 +293,11 @@ export function createNowRouter(ctx: AppContext) {
           rkey: 'self',
           record: record as Record<string, unknown>,
         });
-        return res.json({ uri: response.data.uri, cid: response.data.cid, value: record });
+        return res.json({
+          uri: response.data.uri,
+          cid: response.data.cid,
+          value: record,
+        });
       } catch (err) {
         ctx.logger.error({ err }, 'put now.config failed');
         return res.status(500).json({ error: 'Failed to save config' });
@@ -300,14 +312,18 @@ export function createNowRouter(ctx: AppContext) {
     '/now/live-feed',
     handler(async (req: Request, res: Response) => {
       const did = typeof req.query.did === 'string' ? req.query.did : '';
-      const collection = typeof req.query.collection === 'string' ? req.query.collection : '';
-      const filter = typeof req.query.filter === 'string' ? req.query.filter : '';
+      const collection =
+        typeof req.query.collection === 'string' ? req.query.collection : '';
+      const filter =
+        typeof req.query.filter === 'string' ? req.query.filter : '';
       const limit = Math.min(
         Math.max(parseInt((req.query.limit as string) ?? '5', 10) || 5, 1),
         50
       );
       if (!did.startsWith('did:') || !collection) {
-        return res.status(400).json({ error: 'did and collection are required' });
+        return res
+          .status(400)
+          .json({ error: 'did and collection are required' });
       }
       try {
         const publicAgent = await resolvePublicAgent(did, ctx);
@@ -329,7 +345,9 @@ export function createNowRouter(ctx: AppContext) {
           filter === 'social.crate.now.config#topLevelPosts' ||
           filter === 'social.crate.now.config#noReplies'
         ) {
-          records = records.filter((r) => !(r.value as { reply?: unknown }).reply);
+          records = records.filter(
+            (r) => !(r.value as { reply?: unknown }).reply
+          );
         }
         if (filter === 'social.crate.now.config#noReposts') {
           // app.bsky.feed.repost is a separate collection. For posts that

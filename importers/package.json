@@ -9,7 +9,7 @@
   },
   "scripts": {
     "cli": "tsx src/cli.ts",
-    "test": "vitest run",
+    "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "lexgen": "echo 'TODO: run @atproto/lex-cli gen-api against ../../lexicons and output to src/lexicon/'"
