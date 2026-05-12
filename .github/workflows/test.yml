@@ -16,8 +16,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
-          cache: 'npm'
+          node-version: "22"
+          cache: "npm"
 
       - name: Install root dependencies
         run: npm ci
@@ -57,3 +57,9 @@ jobs:
 
       - name: Install lexicons dependencies
         run: npm ci --prefix lexicons
+
+      - name: Install landing dependencies
+        run: npm ci --prefix landing
+
+      - name: Build landing
+        run: npm run build --prefix landing

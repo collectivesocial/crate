@@ -18,20 +18,21 @@ export interface Main {
   $type: 'social.crate.rss.feed'
   /** The URL of the RSS or Atom feed. */
   url: string
-  /** Human-readable display name for this feed subscription. */
+  /** Human-readable display name for this feed. */
   title: string
-  /** NSID of the target lexicon for imported entries (e.g. social.crate.podcast.episode). */
-  destination:
-    | 'social.crate.podcast.episode'
-    | 'site.standard.document'
-    | (string & {})
-  /** Whether the poller should actively fetch this feed. Defaults to true. */
+  /** Optional short description of the feed. */
+  description?: string
+  /** Optional URL of the human-readable home page that publishes this feed (e.g. the blog or podcast homepage). */
+  siteUrl?: string
+  /** Optional NSID of the target lexicon for imported entries (used by importer pipelines, e.g. social.crate.content). Leave unset for plain feed links you just want to reference. */
+  destination?: string
+  /** Whether an importer should actively fetch this feed. Defaults to false so adding a feed link doesn't accidentally enable polling. */
   active: boolean
-  /** Timestamp of the most recent successful poll. */
+  /** Timestamp of the most recent successful poll (importer bookkeeping). */
   lastPolledAt?: string
-  /** GUID of the last imported entry, used for deduplication on subsequent polls. */
+  /** GUID of the last imported entry, used by importers for deduplication. */
   lastEntryGuid?: string
-  /** Timestamp when this feed subscription was created. */
+  /** Timestamp when this feed record was created. */
   createdAt: string
   [k: string]: unknown
 }

@@ -8,7 +8,7 @@ import { Agent } from '@atproto/api';
 import express, { Request, Response } from 'express';
 import { z } from 'zod';
 import type { AppContext } from '../context';
-import { handler } from '../lib/http';
+import { handler, isRecordNotFoundError } from '../lib/http';
 import { validateMain } from '../lexicon/types/site/standard/document';
 import { getSessionAgent } from '../oauth/session';
 
@@ -193,8 +193,9 @@ export function createDocumentsRouter(ctx: AppContext) {
           value: response.data.value,
         });
       } catch (err) {
-        const status = (err as { status?: number })?.status === 404 ? 404 : 500;
-        if (status === 404) return res.status(404).json({ error: 'Not found' });
+        if (isRecordNotFoundError(err)) {
+          return res.status(404).json({ error: 'Not found' });
+        }
         ctx.logger.error({ err }, 'get document failed');
         return res.status(500).json({ error: 'Failed to fetch document' });
       }

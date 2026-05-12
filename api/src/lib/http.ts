@@ -18,3 +18,19 @@ export function handler(fn: Handler) {
     }
   };
 }
+
+/**
+ * Detect ATProto "record not found" errors from `com.atproto.repo.getRecord`.
+ *
+ * The PDS returns HTTP 400 with `{ error: 'RecordNotFound' }` (not 404), so
+ * relying on `status === 404` alone misses the common case. This helper
+ * normalizes both shapes.
+ */
+export function isRecordNotFoundError(err: unknown): boolean {
+  const e = err as { status?: number; error?: string } | null | undefined;
+  if (!e) return false;
+  if (e.status === 404) return true;
+  if (e.status === 400 && e.error === 'RecordNotFound') return true;
+  return false;
+}
+

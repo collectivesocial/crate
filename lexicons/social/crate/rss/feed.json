@@ -4,11 +4,11 @@
   "defs": {
     "main": {
       "type": "record",
-      "description": "A subscribed RSS or Atom feed with a configured destination lexicon for imported entries.",
+      "description": "An RSS or Atom feed the author follows or publishes. Minimum viable shape: a URL plus a display title. Optional fields support importer pipelines (destination NSID, poller bookkeeping) but are not required — most consumers just want the link to render on a personal site.",
       "key": "tid",
       "record": {
         "type": "object",
-        "required": ["url", "title", "destination", "createdAt"],
+        "required": ["url", "title", "createdAt"],
         "properties": {
           "url": {
             "type": "string",
@@ -19,36 +19,43 @@
             "type": "string",
             "maxGraphemes": 200,
             "maxLength": 2000,
-            "description": "Human-readable display name for this feed subscription."
+            "description": "Human-readable display name for this feed."
+          },
+          "description": {
+            "type": "string",
+            "maxGraphemes": 2000,
+            "maxLength": 20000,
+            "description": "Optional short description of the feed."
+          },
+          "siteUrl": {
+            "type": "string",
+            "format": "uri",
+            "description": "Optional URL of the human-readable home page that publishes this feed (e.g. the blog or podcast homepage)."
           },
           "destination": {
             "type": "string",
             "maxLength": 128,
-            "description": "NSID of the target lexicon for imported entries (e.g. social.crate.podcast.episode).",
-            "knownValues": [
-              "social.crate.podcast.episode",
-              "site.standard.document"
-            ]
+            "description": "Optional NSID of the target lexicon for imported entries (used by importer pipelines, e.g. social.crate.content). Leave unset for plain feed links you just want to reference."
           },
           "active": {
             "type": "boolean",
-            "description": "Whether the poller should actively fetch this feed. Defaults to true.",
-            "default": true
+            "description": "Whether an importer should actively fetch this feed. Defaults to false so adding a feed link doesn't accidentally enable polling.",
+            "default": false
           },
           "lastPolledAt": {
             "type": "string",
             "format": "datetime",
-            "description": "Timestamp of the most recent successful poll."
+            "description": "Timestamp of the most recent successful poll (importer bookkeeping)."
           },
           "lastEntryGuid": {
             "type": "string",
             "maxLength": 2048,
-            "description": "GUID of the last imported entry, used for deduplication on subsequent polls."
+            "description": "GUID of the last imported entry, used by importers for deduplication."
           },
           "createdAt": {
             "type": "string",
             "format": "datetime",
-            "description": "Timestamp when this feed subscription was created."
+            "description": "Timestamp when this feed record was created."
           }
         }
       }

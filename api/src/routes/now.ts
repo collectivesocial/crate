@@ -7,7 +7,7 @@ import { Agent } from '@atproto/api';
 import express, { Request, Response } from 'express';
 import { z } from 'zod';
 import type { AppContext } from '../context';
-import { handler } from '../lib/http';
+import { handler, isRecordNotFoundError } from '../lib/http';
 import { validateMain as validateNow } from '../lexicon/types/social/crate/now';
 import { validateMain as validateConfig } from '../lexicon/types/social/crate/now/config';
 import { getSessionAgent } from '../oauth/session';
@@ -230,7 +230,7 @@ export function createNowRouter(ctx: AppContext) {
           },
         });
       } catch (err) {
-        if ((err as { status?: number })?.status === 404) {
+        if (isRecordNotFoundError(err)) {
           return res.json({ config: null });
         }
         ctx.logger.error({ err }, 'get now.config failed');
