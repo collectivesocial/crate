@@ -43,6 +43,10 @@
             "format": "at-uri",
             "description": "Optional AT-URI of a parent social.crate.note. Used to build hierarchical note trees and breadcrumb navigation. A note without a parent is a root note."
           },
+          "draft": {
+            "type": "boolean",
+            "description": "When true, the note is a private draft and should not be rendered publicly. The record still lives on the user's PDS — drafts are not deletion or hiding from the network, just a signal to rendering apps to skip the note."
+          },
           "publishedAt": {
             "type": "string",
             "format": "datetime",
