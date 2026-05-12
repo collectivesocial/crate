@@ -1,0 +1,36 @@
+{
+  "lexicon": 1,
+  "id": "community.lexicon.calendar.rsvp",
+  "defs": {
+    "main": {
+      "type": "record",
+      "description": "Vendored copy of the community.lexicon.calendar.rsvp lexicon. An RSVP to a community.lexicon.calendar.event record. Stored in the responder's PDS. Compatible with Smoke Signal and other ATProto event apps.",
+      "key": "tid",
+      "record": {
+        "type": "object",
+        "required": ["subject", "status", "createdAt"],
+        "properties": {
+          "subject": {
+            "type": "ref",
+            "ref": "com.atproto.repo.strongRef",
+            "description": "Strong reference (uri + cid) to the event being responded to."
+          },
+          "status": {
+            "type": "string",
+            "knownValues": [
+              "community.lexicon.calendar.rsvp#going",
+              "community.lexicon.calendar.rsvp#interested",
+              "community.lexicon.calendar.rsvp#notgoing"
+            ],
+            "description": "Whether the author is going, interested, or not going."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "datetime",
+            "description": "Timestamp when this RSVP record was created."
+          }
+        }
+      }
+    }
+  }
+}

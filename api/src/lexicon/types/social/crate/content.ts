@@ -26,6 +26,8 @@ export interface Main {
   kindLabel?: string
   /** Plain-text title of the content. */
   title: string
+  /** URL-safe identifier renderers can use to build stable, human-readable URLs for this content (e.g. `/illustrations/my-zine`). Optional; renderers should fall back to the rkey or another identifier when omitted. Useful when migrating existing content so old URLs don't break. */
+  slug?: string
   /** Short markdown summary, abstract, or caption. Appropriate for previews and feeds. */
   description?: string
   /** Full markdown content when this record holds the content itself. Omit when the content lives elsewhere (use canonicalUrl). */

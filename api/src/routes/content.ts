@@ -6,6 +6,7 @@
  */
 import { BlobRef } from '@atproto/lexicon';
 import express, { Request, Response } from 'express';
+import { CID } from 'multiformats/cid';
 import { z } from 'zod';
 import type { AppContext } from '../context';
 import { handler } from '../lib/http';
@@ -52,6 +53,7 @@ const contentInputSchema = z.object({
   kind: kindSchema,
   kindLabel: z.string().max(1000).optional(),
   title: z.string().min(1).max(3000),
+  slug: z.string().max(3000).optional(),
   description: z.string().max(50_000).optional(),
   body: z.string().max(1_000_000).optional(),
   publishedAt: z.string().datetime().optional(),
@@ -63,6 +65,58 @@ const contentInputSchema = z.object({
 });
 
 type ContentInput = z.infer<typeof contentInputSchema>;
+
+/**
+ * Hydrate a wire-format blob ref into a `BlobRef` instance the lexicon
+ * validator will accept.
+ *
+ * The wire shape from the upload endpoint is the modern typed form:
+ *   { $type: 'blob', ref: { $link: cid }, mimeType, size }
+ *
+ * The installed `@atproto/lexicon@0.5.2` `BlobRef.asBlobRef` rejects this
+ * because its zod schema (`schema.cid`) requires `ref` to already be a CID
+ * instance — it doesn't parse the `{ $link: string }` JSON form. We parse
+ * the CID ourselves and call the BlobRef constructor directly.
+ *
+ * Falls back to `asBlobRef` to handle the legacy `{ cid, mimeType }` shape
+ * for blobs that came from older PDS responses.
+ *
+ * Returns `null` when the input doesn't match either known shape, in which
+ * case the caller can fall through to the lexicon validator for a precise
+ * error message.
+ */
+function hydrateBlobRef(raw: unknown): BlobRef | null {
+  if (raw instanceof BlobRef) return raw;
+
+  if (raw && typeof raw === 'object') {
+    const obj = raw as {
+      $type?: unknown;
+      ref?: unknown;
+      mimeType?: unknown;
+      size?: unknown;
+    };
+
+    // Modern typed JSON blob ref.
+    if (
+      obj.$type === 'blob' &&
+      obj.ref &&
+      typeof obj.ref === 'object' &&
+      typeof (obj.ref as { $link?: unknown }).$link === 'string' &&
+      typeof obj.mimeType === 'string' &&
+      typeof obj.size === 'number'
+    ) {
+      try {
+        const cid = CID.parse((obj.ref as { $link: string }).$link);
+        return new BlobRef(cid, obj.mimeType, obj.size);
+      } catch {
+        return null;
+      }
+    }
+  }
+
+  // Legacy `{ cid, mimeType }` shape.
+  return BlobRef.asBlobRef(raw);
+}
 
 function buildRecord(
   input: ContentInput,
@@ -76,16 +130,19 @@ function buildRecord(
     createdAt: opts.createdAt,
   };
   if (input.kindLabel) record.kindLabel = input.kindLabel;
+  if (input.slug) record.slug = input.slug;
   if (input.description) record.description = input.description;
   if (input.body) record.body = input.body;
   if (input.canonicalUrl) record.canonicalUrl = input.canonicalUrl;
   if (input.image) {
-    // The browser sends the BlobRef as plain JSON; the lexicon validator
-    // expects a `BlobRef` class instance, so re-hydrate it here. `asBlobRef`
-    // returns null for shapes it doesn't recognize — fall through to the
-    // validator in that case so the user gets a clear error.
-    const hydrated = BlobRef.asBlobRef(input.image);
-    record.image = hydrated ?? input.image;
+    // The browser sends the BlobRef as the modern wire shape:
+    // `{ $type: 'blob', ref: { $link: cid }, mimeType, size }`. The
+    // installed `@atproto/lexicon@0.5.2` `BlobRef.asBlobRef` helper rejects
+    // that shape because its zod schema demands `ref` already be a CID
+    // instance. So we hydrate manually (see `hydrateBlobRef` above) and
+    // fall through to the raw JSON only when nothing matches so the
+    // lexicon validator can produce a clearer error.
+    record.image = hydrateBlobRef(input.image) ?? input.image;
   }
   if (input.imageAlt) record.imageAlt = input.imageAlt;
   if (input.tags && input.tags.length > 0) record.tags = input.tags;

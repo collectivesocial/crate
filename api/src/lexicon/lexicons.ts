@@ -156,6 +156,45 @@ export const schemaDict = {
       },
     },
   },
+  CommunityLexiconCalendarRsvp: {
+    lexicon: 1,
+    id: 'community.lexicon.calendar.rsvp',
+    defs: {
+      main: {
+        type: 'record',
+        description:
+          "Vendored copy of the community.lexicon.calendar.rsvp lexicon. An RSVP to a community.lexicon.calendar.event record. Stored in the responder's PDS. Compatible with Smoke Signal and other ATProto event apps.",
+        key: 'tid',
+        record: {
+          type: 'object',
+          required: ['subject', 'status', 'createdAt'],
+          properties: {
+            subject: {
+              type: 'ref',
+              ref: 'lex:com.atproto.repo.strongRef',
+              description:
+                'Strong reference (uri + cid) to the event being responded to.',
+            },
+            status: {
+              type: 'string',
+              knownValues: [
+                'community.lexicon.calendar.rsvp#going',
+                'community.lexicon.calendar.rsvp#interested',
+                'community.lexicon.calendar.rsvp#notgoing',
+              ],
+              description:
+                'Whether the author is going, interested, or not going.',
+            },
+            createdAt: {
+              type: 'string',
+              format: 'datetime',
+              description: 'Timestamp when this RSVP record was created.',
+            },
+          },
+        },
+      },
+    },
+  },
   SiteStandardDocument: {
     lexicon: 1,
     id: 'site.standard.document',
@@ -273,6 +312,13 @@ export const schemaDict = {
               maxGraphemes: 300,
               maxLength: 3000,
               description: 'Plain-text title of the content.',
+            },
+            slug: {
+              type: 'string',
+              maxGraphemes: 300,
+              maxLength: 3000,
+              description:
+                "URL-safe identifier renderers can use to build stable, human-readable URLs for this content (e.g. `/illustrations/my-zine`). Optional; renderers should fall back to the rkey or another identifier when omitted. Useful when migrating existing content so old URLs don't break.",
             },
             description: {
               type: 'string',
@@ -1124,6 +1170,7 @@ export function validate(
 export const ids = {
   ComAtprotoRepoStrongRef: 'com.atproto.repo.strongRef',
   CommunityLexiconCalendarEvent: 'community.lexicon.calendar.event',
+  CommunityLexiconCalendarRsvp: 'community.lexicon.calendar.rsvp',
   SiteStandardDocument: 'site.standard.document',
   SocialCrateContent: 'social.crate.content',
   SocialCrateMakingProject: 'social.crate.making.project',

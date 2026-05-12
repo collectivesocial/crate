@@ -35,6 +35,12 @@
             "maxLength": 3000,
             "description": "Plain-text title of the content."
           },
+          "slug": {
+            "type": "string",
+            "maxGraphemes": 300,
+            "maxLength": 3000,
+            "description": "URL-safe identifier renderers can use to build stable, human-readable URLs for this content (e.g. `/illustrations/my-zine`). Optional; renderers should fall back to the rkey or another identifier when omitted. Useful when migrating existing content so old URLs don't break."
+          },
           "description": {
             "type": "string",
             "maxGraphemes": 5000,
