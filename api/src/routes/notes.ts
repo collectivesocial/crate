@@ -29,6 +29,7 @@ const noteInputSchema = z.object({
   slug: z.string().min(1).max(1000),
   body: z.string().min(0).max(1_000_000),
   tags: z.array(z.string().min(1).max(640)).max(30).optional(),
+  parent: z.string().startsWith('at://').max(512).optional(),
   publishedAt: z.string().datetime().optional(),
 });
 
@@ -44,6 +45,7 @@ function buildRecord(input: NoteInput, opts: { updatedAt?: string; createdAt: st
     createdAt: opts.createdAt,
   };
   if (input.tags && input.tags.length > 0) record.tags = input.tags;
+  if (input.parent) record.parent = input.parent;
   if (opts.updatedAt) record.updatedAt = opts.updatedAt;
   return record;
 }

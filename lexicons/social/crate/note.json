@@ -38,6 +38,11 @@
               "maxLength": 640
             }
           },
+          "parent": {
+            "type": "string",
+            "format": "at-uri",
+            "description": "Optional AT-URI of a parent social.crate.note. Used to build hierarchical note trees and breadcrumb navigation. A note without a parent is a root note."
+          },
           "publishedAt": {
             "type": "string",
             "format": "datetime",
