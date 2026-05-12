@@ -49,21 +49,8 @@
             "description": "External links associated with the project.",
             "maxLength": 20,
             "items": {
-              "type": "object",
-              "required": ["url"],
-              "properties": {
-                "label": {
-                  "type": "string",
-                  "maxGraphemes": 100,
-                  "maxLength": 1000,
-                  "description": "Human-readable label for the link."
-                },
-                "url": {
-                  "type": "string",
-                  "format": "uri",
-                  "description": "URL of the linked resource."
-                }
-              }
+              "type": "ref",
+              "ref": "#link"
             }
           },
           "coverImage": {
@@ -73,102 +60,140 @@
             "maxSize": 2000000
           },
           "fiber": {
-            "type": "object",
-            "description": "Fiber arts metadata. Only meaningful when kind is 'fiber'.",
-            "properties": {
-              "pattern": {
-                "type": "string",
-                "maxGraphemes": 200,
-                "maxLength": 2000,
-                "description": "Pattern name or identifier."
-              },
-              "yarn": {
-                "type": "string",
-                "maxGraphemes": 200,
-                "maxLength": 2000,
-                "description": "Yarn name and colorway."
-              },
-              "hookSize": {
-                "type": "string",
-                "maxLength": 32,
-                "description": "Hook or needle size (e.g. '4.0mm', 'US G/6')."
-              },
-              "ravelryUrl": {
-                "type": "string",
-                "format": "uri",
-                "description": "URL of the project on Ravelry."
-              }
-            }
+            "type": "ref",
+            "ref": "#fiber",
+            "description": "Fiber arts metadata. Only meaningful when kind is 'fiber'."
           },
           "code": {
-            "type": "object",
-            "description": "Software project metadata. Only meaningful when kind is 'code'.",
-            "properties": {
-              "repo": {
-                "type": "string",
-                "format": "uri",
-                "description": "URL of the source code repository."
-              },
-              "language": {
-                "type": "string",
-                "maxLength": 64,
-                "description": "Primary programming language."
-              },
-              "deployedUrl": {
-                "type": "string",
-                "format": "uri",
-                "description": "URL of the live deployed project."
-              }
-            }
+            "type": "ref",
+            "ref": "#code",
+            "description": "Software project metadata. Only meaningful when kind is 'code'."
           },
           "site": {
-            "type": "object",
-            "description": "Website project metadata. Only meaningful when kind is 'site'.",
-            "properties": {
-              "url": {
-                "type": "string",
-                "format": "uri",
-                "description": "Live URL of the site."
-              },
-              "role": {
-                "type": "string",
-                "maxGraphemes": 100,
-                "maxLength": 1000,
-                "description": "Your role on the project (e.g. 'designer', 'developer', 'owner')."
-              }
-            }
+            "type": "ref",
+            "ref": "#site",
+            "description": "Website project metadata. Only meaningful when kind is 'site'."
           },
           "garden": {
-            "type": "object",
-            "description": "Garden project metadata. Only meaningful when kind is 'garden'.",
-            "properties": {
-              "bedNumber": {
-                "type": "string",
-                "maxLength": 32,
-                "description": "Bed or plot identifier."
-              },
-              "plants": {
-                "type": "array",
-                "maxLength": 100,
-                "items": {
-                  "type": "string",
-                  "maxGraphemes": 100,
-                  "maxLength": 1000
-                },
-                "description": "List of plants in this bed or project."
-              },
-              "zone": {
-                "type": "string",
-                "maxLength": 16,
-                "description": "USDA hardiness zone (e.g. '7b')."
-              }
-            }
+            "type": "ref",
+            "ref": "#garden",
+            "description": "Garden project metadata. Only meaningful when kind is 'garden'."
           },
           "createdAt": {
             "type": "string",
             "format": "datetime",
             "description": "Timestamp when this record was created."
           }
+        }
+      }
+    },
+    "link": {
+      "type": "object",
+      "description": "An external link associated with a project.",
+      "required": ["url"],
+      "properties": {
+        "label": {
+          "type": "string",
+          "maxGraphemes": 100,
+          "maxLength": 1000,
+          "description": "Human-readable label for the link."
+        },
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL of the linked resource."
+        }
+      }
+    },
+    "fiber": {
+      "type": "object",
+      "description": "Fiber arts metadata.",
+      "properties": {
+        "pattern": {
+          "type": "string",
+          "maxGraphemes": 200,
+          "maxLength": 2000,
+          "description": "Pattern name or identifier."
+        },
+        "yarn": {
+          "type": "string",
+          "maxGraphemes": 200,
+          "maxLength": 2000,
+          "description": "Yarn name and colorway."
+        },
+        "hookSize": {
+          "type": "string",
+          "maxLength": 32,
+          "description": "Hook or needle size (e.g. '4.0mm', 'US G/6')."
+        },
+        "ravelryUrl": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL of the project on Ravelry."
+        }
+      }
+    },
+    "code": {
+      "type": "object",
+      "description": "Software project metadata.",
+      "properties": {
+        "repo": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL of the source code repository."
+        },
+        "language": {
+          "type": "string",
+          "maxLength": 64,
+          "description": "Primary programming language."
+        },
+        "deployedUrl": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL of the live deployed project."
+        }
+      }
+    },
+    "site": {
+      "type": "object",
+      "description": "Website project metadata.",
+      "properties": {
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "description": "Live URL of the site."
+        },
+        "role": {
+          "type": "string",
+          "maxGraphemes": 100,
+          "maxLength": 1000,
+          "description": "Your role on the project (e.g. 'designer', 'developer', 'owner')."
+        }
+      }
+    },
+    "garden": {
+      "type": "object",
+      "description": "Garden project metadata.",
+      "properties": {
+        "bedNumber": {
+          "type": "string",
+          "maxLength": 32,
+          "description": "Bed or plot identifier."
+        },
+        "plants": {
+          "type": "array",
+          "maxLength": 100,
+          "items": {
+            "type": "string",
+            "maxGraphemes": 100,
+            "maxLength": 1000
+          },
+          "description": "List of plants in this bed or project."
+        },
+        "zone": {
+          "type": "string",
+          "maxLength": 16,
+          "description": "USDA hardiness zone (e.g. '7b')."
         }
       }
     }

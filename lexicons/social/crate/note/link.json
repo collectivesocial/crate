@@ -16,32 +16,9 @@
             "description": "AT-URI of the social.crate.note that contains this link."
           },
           "target": {
-            "type": "object",
-            "description": "Link destination. Exactly one of atUri or externalUrl must be set. atUri is preferred for federated records (notes, books, episodes, talks). externalUrl is used for external web resources or unresolved [[wikilinks]].",
-            "properties": {
-              "atUri": {
-                "type": "string",
-                "format": "at-uri",
-                "description": "AT-URI of the target record when the link resolves to an ATProto resource."
-              },
-              "externalUrl": {
-                "type": "string",
-                "format": "uri",
-                "description": "External URL when the target is outside the AT network (or the [[wikilink]] has not yet been resolved to a record)."
-              },
-              "title": {
-                "type": "string",
-                "maxGraphemes": 300,
-                "maxLength": 3000,
-                "description": "Human-readable title of the link target, stored for display without requiring a round-trip."
-              },
-              "description": {
-                "type": "string",
-                "maxGraphemes": 1000,
-                "maxLength": 10000,
-                "description": "Optional short description or excerpt of the link target."
-              }
-            }
+            "type": "ref",
+            "ref": "#target",
+            "description": "Link destination."
           },
           "context": {
             "type": "string",
@@ -60,6 +37,34 @@
             "format": "datetime",
             "description": "Timestamp when this link record was created."
           }
+        }
+      }
+    },
+    "target": {
+      "type": "object",
+      "description": "Link destination. Exactly one of atUri or externalUrl should be set. atUri is preferred for federated records (notes, books, episodes, talks). externalUrl is used for external web resources or unresolved [[wikilinks]].",
+      "properties": {
+        "atUri": {
+          "type": "string",
+          "format": "at-uri",
+          "description": "AT-URI of the target record when the link resolves to an ATProto resource."
+        },
+        "externalUrl": {
+          "type": "string",
+          "format": "uri",
+          "description": "External URL when the target is outside the AT network (or the [[wikilink]] has not yet been resolved to a record)."
+        },
+        "title": {
+          "type": "string",
+          "maxGraphemes": 300,
+          "maxLength": 3000,
+          "description": "Human-readable title of the link target, stored for display without requiring a round-trip."
+        },
+        "description": {
+          "type": "string",
+          "maxGraphemes": 1000,
+          "maxLength": 10000,
+          "description": "Optional short description or excerpt of the link target."
         }
       }
     }

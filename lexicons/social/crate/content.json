@@ -1,0 +1,183 @@
+{
+  "lexicon": 1,
+  "id": "social.crate.content",
+  "defs": {
+    "main": {
+      "type": "record",
+      "description": "A unified record type for things the author has made: illustrations, articles, videos, talks, newsletters, podcasts. The kind field discriminates the variant; type-specific fields (media, event, series) are optional sub-objects. Long-form blog posts and newsletters whose body lives elsewhere (e.g., site.standard.document on Offprint) should use canonicalUrl rather than body.",
+      "key": "tid",
+      "record": {
+        "type": "object",
+        "required": ["kind", "title", "publishedAt", "createdAt"],
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "illustration",
+              "article",
+              "video",
+              "talk",
+              "newsletter",
+              "podcast",
+              "other"
+            ],
+            "description": "Discriminator for the content variant. Closed enum in v1; adding new kinds requires a lexicon update."
+          },
+          "title": {
+            "type": "string",
+            "maxGraphemes": 300,
+            "maxLength": 3000,
+            "description": "Plain-text title of the content."
+          },
+          "description": {
+            "type": "string",
+            "maxGraphemes": 5000,
+            "maxLength": 50000,
+            "description": "Short markdown summary, abstract, or caption. Appropriate for previews and feeds."
+          },
+          "body": {
+            "type": "string",
+            "maxGraphemes": 100000,
+            "maxLength": 1000000,
+            "description": "Full markdown content when this record holds the content itself. Omit when the content lives elsewhere (use canonicalUrl)."
+          },
+          "publishedAt": {
+            "type": "string",
+            "format": "datetime",
+            "description": "When this piece of content was originally published."
+          },
+          "canonicalUrl": {
+            "type": "string",
+            "format": "uri",
+            "description": "Canonical URL where the content originally lives (e.g., a YouTube video, a github.blog article, a podcast episode page). When set, renderers should link readers to this URL as the primary destination."
+          },
+          "image": {
+            "type": "blob",
+            "description": "Cover image, illustration, or thumbnail.",
+            "accept": [
+              "image/jpeg",
+              "image/png",
+              "image/webp",
+              "image/gif",
+              "image/svg+xml"
+            ],
+            "maxSize": 2000000
+          },
+          "tags": {
+            "type": "array",
+            "description": "Freeform tags shared across all content kinds. Enables cross-kind filtering.",
+            "maxLength": 30,
+            "items": {
+              "type": "string",
+              "maxGraphemes": 64,
+              "maxLength": 640
+            }
+          },
+          "media": {
+            "type": "ref",
+            "ref": "#media",
+            "description": "Type-specific media references (audio, video, slides, duration). Used by video, podcast, talk."
+          },
+          "event": {
+            "type": "ref",
+            "ref": "#event",
+            "description": "Event metadata. Used by talk."
+          },
+          "series": {
+            "type": "ref",
+            "ref": "#series",
+            "description": "Series metadata. Used by podcast, newsletter."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "datetime",
+            "description": "Timestamp when this record was first created in the user's PDS."
+          }
+        }
+      }
+    },
+    "media": {
+      "type": "object",
+      "description": "Type-specific media URLs and duration. All fields optional; populate whichever apply to the content kind.",
+      "properties": {
+        "audioUrl": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL of an audio file (used by podcast)."
+        },
+        "videoUrl": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL of a video recording (used by video, talk)."
+        },
+        "slidesUrl": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL of a slide deck (used by talk)."
+        },
+        "duration": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Duration in seconds (used by video, podcast, talk)."
+        }
+      }
+    },
+    "event": {
+      "type": "object",
+      "description": "Event metadata for a talk.",
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "maxGraphemes": 300,
+          "maxLength": 3000,
+          "description": "Name of the conference or event."
+        },
+        "eventRef": {
+          "type": "string",
+          "format": "at-uri",
+          "description": "AT-URI of the community.lexicon.calendar.event record, if one exists."
+        },
+        "location": {
+          "type": "string",
+          "maxGraphemes": 300,
+          "maxLength": 3000,
+          "description": "Human-readable event location (e.g., 'Seattle, WA')."
+        },
+        "date": {
+          "type": "string",
+          "format": "datetime",
+          "description": "Event date and time."
+        }
+      }
+    },
+    "series": {
+      "type": "object",
+      "description": "Series metadata for a podcast or newsletter.",
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "maxGraphemes": 300,
+          "maxLength": 3000,
+          "description": "Name of the show or publication (e.g., 'Overcommitted', 'The Balanced Engineer')."
+        },
+        "episodeNumber": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Episode or issue number within the series."
+        },
+        "season": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Season number, if the series uses seasons."
+        },
+        "feedUrl": {
+          "type": "string",
+          "format": "uri",
+          "description": "Canonical RSS or Atom feed URL for the series."
+        }
+      }
+    }
+  }
+}

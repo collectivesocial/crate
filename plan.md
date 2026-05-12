@@ -31,31 +31,31 @@ Crate is generic enough to be useful to others. You're shipping it as a service,
 
 ## Lexicon catalog
 
-All Crate-defined lexicons live under the `social.crate.*` namespace.
+All Crate-defined lexicons live under the `social.crate.*` namespace. A vendored copy of the `community.lexicon.calendar.event` lexicon is also kept under `lexicons/community/lexicon/calendar/` so Crate can validate and create event records directly.
 
 | NSID | Purpose |
 |---|---|
 | `social.crate.rss.feed` | A subscribed RSS feed with a configured destination lexicon |
-| `social.crate.podcast.episode` | Individual podcast episode record |
+| `social.crate.content` | Unified record for illustrations, articles, videos, talks, newsletters, and podcasts (discriminated by `kind`) |
 | `social.crate.making.project` | Unified project record (fiber, code, site, garden, illustration-set, other) |
 | `social.crate.making.update` | Sub-document attached to a project (progress logs, garden journal entries) |
-| `social.crate.talk` | Conference talk |
-| `social.crate.illustration` | Stick-figure illustration |
 | `social.crate.note` | PKM/Zettelkasten markdown note |
 | `social.crate.note.link` | Federated link/backlink between notes and any AT-URI or external URL |
 | `social.crate.now` | Now-page update (append-only stream; latest is current) |
+| `community.lexicon.calendar.event` | Calendar event, vendored for in-Crate event creation. Compatible with Smoke Signal and other ATProto event apps. |
 
 External lexicons Crate reads from or links to:
 
 | NSID | Source |
 |---|---|
-| `site.standard.document` | Blog/newsletter content (verify Offprint's actual lexicon before committing) |
+| `site.standard.document` | Blog/newsletter content (Offprint publishes against this lexicon family) |
 | `site.standard.publication` | The publication metadata for your blog/newsletter |
-| `community.lexicon.calendar.event` | Events on the network |
-| `community.lexicon.calendar.rsvp` | Your RSVPs (verify exact NSID) |
+| `community.lexicon.calendar.rsvp` | Your RSVPs (verify exact NSID before implementing) |
 | `app.collectivesocial.list`[1] | Shared lists (including book clubs) in Collective |
 | `app.collectivesocial.listitem`[1] | Items in Collective lists |
 | `app.bsky.feed.post` | Bluesky posts |
+
+> **Lexicon consolidation (2026-05-12):** The earlier per-format lexicons `social.crate.illustration`, `social.crate.talk`, and `social.crate.podcast.episode` were replaced by the single `social.crate.content` record type with a `kind` discriminator. Renderers switch on `kind` and the optional `media` / `event` / `series` sub-objects to produce the appropriate display.
 
 ---
 
@@ -68,9 +68,9 @@ External lexicons Crate reads from or links to:
 
 ---
 
-## Lexicon shapes (drafts)
+## Lexicon shapes
 
-These are first-pass field lists. Each will need to become a proper Lexicon JSON file with types, validation, and string format constraints. Rough shapes only:
+The authoritative shapes live as Lexicon JSON in [`lexicons/`](./lexicons/). The summaries below are intentionally terse — pull the JSON when you need the full constraints (length caps, formats, allowed values).
 
 ### `social.crate.rss.feed`
 
@@ -86,23 +86,32 @@ These are first-pass field lists. Each will need to become a proper Lexicon JSON
 }
 ```
 
-### `social.crate.podcast.episode`
+### `social.crate.content`
+
+Unified record type for illustrations, articles, videos, talks, newsletters, and podcasts. The `kind` enum is closed in v1.
 
 ```json
 {
+  "kind": "<required: 'illustration' | 'article' | 'video' | 'talk' | 'newsletter' | 'podcast' | 'other'>",
   "title": "<required>",
-  "description": "<required>",
-  "audioUrl": "<required>",
-  "duration": "<seconds, optional>",
+  "description": "<markdown summary, optional>",
+  "body": "<markdown body, optional — omit when content lives elsewhere>",
   "publishedAt": "<datetime, required>",
-  "episodeNumber": "<optional>",
-  "season": "<optional>",
-  "showName": "<required>",
-  "guid": "<from RSS, for dedupe>",
-  "feedRef": "<at-uri of social.crate.rss.feed>",
+  "canonicalUrl": "<uri, optional — where the content originally lives>",
+  "image": "<blob ref, optional — cover/thumbnail/illustration>",
+  "tags": "<array of strings, optional>",
+  "media":  "<optional object: { audioUrl?, videoUrl?, slidesUrl?, duration? } — for video/podcast/talk>",
+  "event":  "<optional object: { name, eventRef?, location?, date? } — for talk>",
+  "series": "<optional object: { name, episodeNumber?, season?, feedUrl? } — for podcast/newsletter>",
   "createdAt": "<datetime, required>"
 }
 ```
+
+Render rules of thumb:
+
+- `canonicalUrl` set → renderers treat this record as metadata pointing at the real thing (e.g., a YouTube link).
+- `body` set → record holds the content itself (markdown).
+- `image` is the only blob; everything else is references or text.
 
 ### `social.crate.making.project`
 
@@ -114,12 +123,12 @@ These are first-pass field lists. Each will need to become a proper Lexicon JSON
   "description": "<markdown, required>",
   "startedAt": "<datetime, optional>",
   "finishedAt": "<datetime, optional>",
-  "links": "<array of {label, url}, optional>",
+  "links": "<array of #link { label?, url }>",
   "coverImage": "<blob ref, optional>",
-  "fiber": "<optional object: pattern, yarn, hookSize, ravelryUrl>",
-  "code": "<optional object: repo, language, deployedUrl>",
-  "site": "<optional object: url, role>",
-  "garden": "<optional object: bedNumber, plants[], zone>",
+  "fiber":  "<optional #fiber: { pattern, yarn, hookSize, ravelryUrl }>",
+  "code":   "<optional #code: { repo, language, deployedUrl }>",
+  "site":   "<optional #site: { url, role }>",
+  "garden": "<optional #garden: { bedNumber, plants[], zone }>",
   "createdAt": "<datetime, required>"
 }
 ```
@@ -131,35 +140,6 @@ These are first-pass field lists. Each will need to become a proper Lexicon JSON
   "project": "<at-uri of social.crate.making.project, required>",
   "body": "<markdown, required>",
   "photos": "<array of blob refs, optional>",
-  "createdAt": "<datetime, required>"
-}
-```
-
-### `social.crate.talk`
-
-```json
-{
-  "title": "<required>",
-  "abstract": "<markdown, optional>",
-  "eventName": "<required>",
-  "eventRef": "<at-uri of community.lexicon.calendar.event, optional>",
-  "givenAt": "<datetime, required>",
-  "slidesUrl": "<optional>",
-  "videoUrl": "<optional>",
-  "coPresenters": "<array of {name, did?}, optional>",
-  "createdAt": "<datetime, required>"
-}
-```
-
-### `social.crate.illustration`
-
-```json
-{
-  "title": "<optional>",
-  "caption": "<required>",
-  "image": "<blob ref, required>",
-  "topic": "<optional>",
-  "sourcePost": "<at-uri, optional>",
   "createdAt": "<datetime, required>"
 }
 ```
@@ -183,24 +163,47 @@ These are first-pass field lists. Each will need to become a proper Lexicon JSON
 ```json
 {
   "source": "<at-uri of social.crate.note, required>",
-  "target": "<object, required: { atUri?, externalUrl?, title?, description? }>",
+  "target": "<#target { atUri? | externalUrl?, title?, description? }>",
   "context": "<optional, the surrounding sentence or annotation>",
+  "anchorText": "<optional, the [[wikilink]] text or visible link text>",
   "createdAt": "<datetime, required>"
 }
 ```
 
-The `target` is a union — either an ATProto reference (preferred, federated) or an external URL. This is the single record type that connects notes to: other notes, Collective books, Semble bookmarks, podcast episodes, making projects, talks, and external articles.
+`target` is a single object with two mutually exclusive shapes: either an ATProto AT-URI (preferred, federated) or an external URL. This is the connective tissue that links notes to other notes, Collective books, podcast/talk/article entries in `social.crate.content`, making projects, events, and external articles.
 
 ### `social.crate.now`
 
 ```json
 {
   "body": "<markdown, required>",
+  "location": "<plain text, optional — e.g. 'Vancouver, WA'>",
+  "summary": "<plain text, optional — one-line preview>",
   "createdAt": "<datetime, required>"
 }
 ```
 
-Append-only. The latest record is "current."
+Append-only. The latest record by `createdAt` is "current."
+
+### `community.lexicon.calendar.event` (vendored)
+
+Standard Lexicon Community event shape, vendored under `lexicons/community/lexicon/calendar/event.json` so Crate can validate and create event records the same way Smoke Signal does.
+
+```json
+{
+  "name": "<required>",
+  "description": "<optional>",
+  "startsAt": "<datetime, optional>",
+  "endsAt":   "<datetime, optional>",
+  "mode":   "<knownValues: #virtual | #inperson | #hybrid>",
+  "status": "<knownValues: #scheduled | #cancelled | #postponed>",
+  "locations": "<array of #location { name?, locality?, region?, country? }>",
+  "uris":      "<array of #uri { uri, name? }>",
+  "createdAt": "<datetime, required>"
+}
+```
+
+Use cases: speaking engagements, meetups you're hosting, conferences you're attending. Stored in the user's own PDS. Compatible with anything on the network that reads the `community.lexicon.calendar.event` NSID.
 
 ---
 
@@ -227,7 +230,7 @@ Responsibilities:
    - **Markdown folder importer** — accepts a tarball or git URL, parses markdown files, creates records (notes by default, configurable destination)
    - **Manual entry** — REST endpoints the web app calls
    - **Future: Ravelry, GitHub, etc.** as additional adapters
-4. **Mapping layer.** For each `(source type, destination NSID)` pair, a transformer that converts source data into a valid record. Built-in mappings to start: `RSS → social.crate.podcast.episode`, `RSS → site.standard.document`, `markdown → social.crate.note`, `markdown → site.standard.document`.
+4. **Mapping layer.** For each `(source type, destination NSID)` pair, a transformer that converts source data into a valid record. Built-in mappings to start: `RSS → social.crate.content (kind=podcast)`, `RSS → site.standard.document`, `markdown → social.crate.note`, `markdown → site.standard.document`.
 5. **Read API.** XRPC endpoints for:
    - Listing a user's records by lexicon
    - Resolving cross-lexicon references (e.g. given a note, find its outgoing links and incoming backlinks)
@@ -245,8 +248,8 @@ Routes:
 - `/` — dashboard: recent activity, feed-poll status, draft notes
 - `/feeds` — manage RSS feeds (add, configure destination, view ingest history)
 - `/projects` — list/create/edit `making.project` records, attach `making.update` sub-docs
-- `/talks` — list/create/edit talks
-- `/illustrations` — list/upload illustrations
+- `/content` — list/create/edit `social.crate.content` records (filtered or grouped by `kind`: illustrations, articles, videos, talks, newsletters, podcasts)
+- `/events` — list/create/edit `community.lexicon.calendar.event` records (speaking engagements, meetups, conferences)
 - `/notes` — Zettelkasten editor: list, create, edit notes; visualize backlinks
 - `/notes/:slug/links` — manage outgoing links from a note
 - `/now` — write a new now-page update, view history
@@ -272,12 +275,12 @@ Goal: by show day, every existing piece of your content lives as an ATProto reco
 
 ### Order of operations
 
-1. **Define and publish all nine `social.crate.*` lexicons.** JSON files in `lexicons/`, served at the right NSIDs. This unblocks everything else.
+1. **Define and publish the `social.crate.*` lexicons (and the vendored `community.lexicon.calendar.event`).** JSON files in `lexicons/`, served at the right NSIDs. This unblocks everything else.
 2. **Stand up the API.** OAuth working, can read/write records to your own PDS.
 3. **Markdown folder importer → `social.crate.note`.** Run it on your existing Zettelkasten files. This is the biggest content set.
-4. **RSS adapter → `social.crate.podcast.episode`.** Point at the Overcommitted RSS feed; backfill all episodes.
+4. **RSS adapter → `social.crate.content` (`kind=podcast`).** Point at the Overcommitted RSS feed; backfill all episodes.
 5. **RSS adapter → `site.standard.document`.** Point at your current newsletter feed (or migrate to Offprint first, then point at Offprint's feed). Confirm destination lexicon before running.
-6. **Manual entry / one-off scripts** for talks, projects, illustrations, current "now" status. These are low-volume enough that a one-time script per type is fine.
+6. **Manual entry / one-off scripts** for the rest of `social.crate.content` (illustrations, articles, videos, talks), making projects, events, and current "now" status. These are low-volume enough that a one-time script per `kind` is fine.
 
 ### Open-source angle
 
@@ -285,7 +288,7 @@ The migration script itself is the headline open-source artifact. Structure as a
 
 ```
 crate-importers/
-├── rss-to-podcast/
+├── rss-to-content/        # destination kind chosen per feed (podcast, newsletter, etc.)
 ├── rss-to-standard-doc/
 ├── markdown-to-note/
 ├── markdown-to-standard-doc/

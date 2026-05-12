@@ -1,0 +1,119 @@
+{
+  "lexicon": 1,
+  "id": "community.lexicon.calendar.event",
+  "defs": {
+    "main": {
+      "type": "record",
+      "description": "A calendar event. Stored in the author's PDS repo. Compatible with the Lexicon Community calendar event lexicon used by Smoke Signal and other ATProto event apps.",
+      "key": "tid",
+      "record": {
+        "type": "object",
+        "required": ["name", "createdAt"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 256,
+            "description": "Human-readable event name."
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 2048,
+            "description": "Optional event description or agenda."
+          },
+          "startsAt": {
+            "type": "string",
+            "format": "datetime",
+            "description": "Event start date and time."
+          },
+          "endsAt": {
+            "type": "string",
+            "format": "datetime",
+            "description": "Event end date and time."
+          },
+          "mode": {
+            "type": "string",
+            "knownValues": [
+              "community.lexicon.calendar.event#virtual",
+              "community.lexicon.calendar.event#inperson",
+              "community.lexicon.calendar.event#hybrid"
+            ],
+            "description": "Whether the event is virtual, in-person, or hybrid."
+          },
+          "status": {
+            "type": "string",
+            "knownValues": [
+              "community.lexicon.calendar.event#scheduled",
+              "community.lexicon.calendar.event#cancelled",
+              "community.lexicon.calendar.event#postponed"
+            ],
+            "description": "Event status."
+          },
+          "locations": {
+            "type": "array",
+            "description": "Physical location(s) for in-person or hybrid events.",
+            "items": {
+              "type": "ref",
+              "ref": "#location"
+            }
+          },
+          "uris": {
+            "type": "array",
+            "description": "Virtual meeting links or related URLs.",
+            "items": {
+              "type": "ref",
+              "ref": "#uri"
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "datetime",
+            "description": "Timestamp when this record was created."
+          }
+        }
+      }
+    },
+    "location": {
+      "type": "object",
+      "description": "Physical location for an event.",
+      "properties": {
+        "name": {
+          "type": "string",
+          "maxLength": 256,
+          "description": "Location name (e.g. 'Downtown Library')."
+        },
+        "locality": {
+          "type": "string",
+          "maxLength": 256,
+          "description": "City or locality."
+        },
+        "region": {
+          "type": "string",
+          "maxLength": 256,
+          "description": "State or region."
+        },
+        "country": {
+          "type": "string",
+          "maxLength": 256,
+          "description": "Country."
+        }
+      }
+    },
+    "uri": {
+      "type": "object",
+      "description": "A labeled URL associated with an event (e.g. a Zoom link, ticket page, or event website).",
+      "required": ["uri"],
+      "properties": {
+        "uri": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL (e.g. Zoom link, Google Meet link, event page)."
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 256,
+          "description": "Label for the link (e.g. 'Zoom Meeting', 'Tickets', 'Event Page')."
+        }
+      }
+    }
+  }
+}

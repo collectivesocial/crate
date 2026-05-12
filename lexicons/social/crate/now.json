@@ -16,6 +16,18 @@
             "maxLength": 100000,
             "description": "Now page content in markdown. Describes what the author is currently doing, making, reading, or focused on."
           },
+          "location": {
+            "type": "string",
+            "maxGraphemes": 300,
+            "maxLength": 3000,
+            "description": "Optional plain-text location (e.g., 'Vancouver, WA')."
+          },
+          "summary": {
+            "type": "string",
+            "maxGraphemes": 300,
+            "maxLength": 3000,
+            "description": "Optional one-line summary for previews and feeds."
+          },
           "createdAt": {
             "type": "string",
             "format": "datetime",

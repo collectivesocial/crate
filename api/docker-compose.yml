@@ -1,14 +1,15 @@
-version: '3.8'
-
 services:
   postgres:
     image: postgres:16
+    container_name: crate-postgres
     environment:
       POSTGRES_USER: crate
       POSTGRES_PASSWORD: crate
       POSTGRES_DB: crate
     ports:
-      - '5432:5432'
+      # Host port 5434 → container 5432 to avoid collision with
+      # collective-social-api (5432) and atproto devnet (5433).
+      - "5434:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
