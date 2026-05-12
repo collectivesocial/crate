@@ -4,6 +4,7 @@
  * endpoint so the editor can attach a cover image without proxying the raw
  * bytes through the user's browser to the PDS twice.
  */
+import { BlobRef } from '@atproto/lexicon';
 import express, { Request, Response } from 'express';
 import { z } from 'zod';
 import type { AppContext } from '../context';
@@ -78,7 +79,14 @@ function buildRecord(
   if (input.description) record.description = input.description;
   if (input.body) record.body = input.body;
   if (input.canonicalUrl) record.canonicalUrl = input.canonicalUrl;
-  if (input.image) record.image = input.image;
+  if (input.image) {
+    // The browser sends the BlobRef as plain JSON; the lexicon validator
+    // expects a `BlobRef` class instance, so re-hydrate it here. `asBlobRef`
+    // returns null for shapes it doesn't recognize — fall through to the
+    // validator in that case so the user gets a clear error.
+    const hydrated = BlobRef.asBlobRef(input.image);
+    record.image = hydrated ?? input.image;
+  }
   if (input.imageAlt) record.imageAlt = input.imageAlt;
   if (input.tags && input.tags.length > 0) record.tags = input.tags;
   if (input.bskyPostRef) record.bskyPostRef = input.bskyPostRef;
