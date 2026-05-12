@@ -1,35 +1,41 @@
 /**
  * ATProto OAuth client metadata for crate.social.
  *
- * Scope string mirrors the open-social pattern:
- *   'atproto repo:<collection> ...'
+ * Scope philosophy: ask for the minimum needed to do crate's job.
  *
- * WRITE scopes — all nine social.crate.* record types:
- *   repo:social.crate.rss.feed, repo:social.crate.podcast.episode,
- *   repo:social.crate.making.project, repo:social.crate.making.update,
- *   repo:social.crate.talk, repo:social.crate.illustration,
- *   repo:social.crate.note, repo:social.crate.note.link, repo:social.crate.now
+ * - `atproto` (required) — base OAuth grant.
  *
- * READ scopes — external lexicons (public records; ATProto does not require
- * OAuth for reading other users' public repos, so these are not listed here.
- * If crate ever needs to read the *authed user's* records in these namespaces
- * via the PDS's authenticated XRPC, add them as additional repo: scopes):
- *   site.standard.*, community.lexicon.calendar.*,
- *   app.collective.*, app.bsky.feed.post
+ * - `repo:<NSID>` — one per lexicon crate WRITES to the user's PDS. Granular
+ *   scopes are preferred over `transition:generic` so users see exactly what
+ *   crate can write and so a compromised crate token can't touch unrelated
+ *   collections (e.g. app.bsky.feed.post).
  *
- * See: open-social/src/middleware/auth.ts — OPENSOCIAL_SCOPES
+ * Reads:
+ *   - Profile (handle, avatar, displayName) is fetched from the unauthenticated
+ *     public Bluesky AppView (https://public.api.bsky.app) — no scope needed.
+ *     See src/routes/session.ts.
+ *   - Reading anyone's public ATProto records (site.standard.*, app.bsky.*,
+ *     app.collectivesocial.*, community.lexicon.*, social.crate.* from other
+ *     users) is unauthenticated — no scope needed.
+ *
+ * Adding a new lexicon to crate? Add its repo:<NSID> here.
+ *
+ * Reference: open-social/src/middleware/auth.ts — OPENSOCIAL_SCOPES.
  */
 export const CRATE_SCOPES = [
   'atproto',
+  // social.crate.* — crate's own lexicons
   'repo:social.crate.rss.feed',
-  'repo:social.crate.podcast.episode',
+  'repo:social.crate.content',
   'repo:social.crate.making.project',
   'repo:social.crate.making.update',
-  'repo:social.crate.talk',
-  'repo:social.crate.illustration',
   'repo:social.crate.note',
   'repo:social.crate.note.link',
   'repo:social.crate.now',
+  // External lexicons crate WRITES on the user's behalf
+  'repo:community.lexicon.calendar.event',
+  'repo:site.standard.document',
+  'repo:site.standard.publication',
 ].join(' ');
 
 /**
