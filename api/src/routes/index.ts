@@ -4,6 +4,7 @@ import { createContentRouter } from './content';
 import { createDocumentsRouter } from './documents';
 import { createHealthRouter } from './health';
 import { createNotesRouter } from './notes';
+import { createNowRouter } from './now';
 import { createOAuthRouter } from './oauth';
 import { createSessionRouter } from './session';
 
@@ -24,4 +25,5 @@ export function mountRoutes(app: Application, ctx: AppContext): void {
   app.use('/api', createNotesRouter(ctx));
   app.use('/api', createDocumentsRouter(ctx));
   app.use('/api', createContentRouter(ctx));
+  app.use('/api', createNowRouter(ctx));
 }

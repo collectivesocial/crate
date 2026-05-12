@@ -23,6 +23,12 @@
             ],
             "description": "Discriminator for the content variant. Closed enum in v1; adding new kinds requires a lexicon update."
           },
+          "kindLabel": {
+            "type": "string",
+            "maxGraphemes": 100,
+            "maxLength": 1000,
+            "description": "Optional user-supplied label shown alongside the kind. Most useful when kind is 'other' to describe what the content actually is (e.g. 'zine', 'recipe', 'sticker pack'). Renderers should prefer this label when present and the kind is 'other'."
+          },
           "title": {
             "type": "string",
             "maxGraphemes": 300,

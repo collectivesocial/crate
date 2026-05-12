@@ -49,6 +49,7 @@ const strongRefSchema = z.object({
 
 const contentInputSchema = z.object({
   kind: kindSchema,
+  kindLabel: z.string().max(1000).optional(),
   title: z.string().min(1).max(3000),
   description: z.string().max(50_000).optional(),
   body: z.string().max(1_000_000).optional(),
@@ -73,6 +74,7 @@ function buildRecord(
     publishedAt: opts.publishedAt,
     createdAt: opts.createdAt,
   };
+  if (input.kindLabel) record.kindLabel = input.kindLabel;
   if (input.description) record.description = input.description;
   if (input.body) record.body = input.body;
   if (input.canonicalUrl) record.canonicalUrl = input.canonicalUrl;

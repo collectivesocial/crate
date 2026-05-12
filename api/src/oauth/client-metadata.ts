@@ -38,6 +38,7 @@ export const CRATE_SCOPES = [
   'repo:social.crate.note',
   'repo:social.crate.note.link',
   'repo:social.crate.now',
+  'repo:social.crate.now.config',
   // External lexicons crate WRITES on the user's behalf
   'repo:community.lexicon.calendar.event',
   'repo:site.standard.document',
