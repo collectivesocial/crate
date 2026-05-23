@@ -2,6 +2,7 @@
   "name": "crate-api",
   "version": "1.0.0",
   "description": "Backend API for crate.social — ATProto OAuth, Postgres indexing, record writes",
+  "type": "module",
   "main": "dist/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
@@ -13,6 +14,7 @@
     "migrate:up": "tsx scripts/migrate.ts up",
     "migrate:down": "tsx scripts/migrate.ts down",
     "migrate:status": "tsx scripts/migrate.ts status",
+    "lint": "eslint src",
     "format": "prettier --write \"src/**/*.{ts,js,json}\"",
     "format:check": "prettier --check \"src/**/*.{ts,js,json}\""
   },
@@ -42,9 +44,11 @@
     "@types/express": "^5.0.6",
     "@types/node": "^22.19.11",
     "@types/pg": "^8.16.0",
+    "eslint": "^10.4.0",
     "prettier": "^3.7.1",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
+    "typescript-eslint": "^8.59.4",
     "vitest": "^4.0.18"
   }
 }

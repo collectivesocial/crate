@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const url = makeValidator<string>((input) => {
+const _url = makeValidator<string>((input) => {
   try {
     new URL(input);
     return input;

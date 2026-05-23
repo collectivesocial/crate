@@ -1,4 +1,4 @@
-import { Generated, Kysely, PostgresDialect } from 'kysely';
+import { Kysely, PostgresDialect } from 'kysely';
 import { Pool } from 'pg';
 
 // ── OAuth tables ─────────────────────────────────────────────────────────
