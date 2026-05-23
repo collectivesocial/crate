@@ -96,7 +96,10 @@ function buildEventRecord(input: EventInput, opts: { createdAt: string }) {
 }
 
 /** Resolve a DID to a public, read-only Agent against its PDS. */
-async function resolvePublicAgent(did: string, ctx: AppContext): Promise<Agent> {
+async function resolvePublicAgent(
+  did: string,
+  ctx: AppContext
+): Promise<Agent> {
   const resolver = (
     ctx.oauthClient as unknown as {
       didResolver: { resolve(did: string): Promise<{ service?: unknown }> };
@@ -236,9 +239,11 @@ export function createEventsRouter(ctx: AppContext) {
           collection: EVENT_COLLECTION,
           record: record as Record<string, unknown>,
         });
-        return res
-          .status(201)
-          .json({ uri: response.data.uri, cid: response.data.cid, value: record });
+        return res.status(201).json({
+          uri: response.data.uri,
+          cid: response.data.cid,
+          value: record,
+        });
       } catch (err) {
         ctx.logger.error({ err }, 'create event failed');
         return res.status(500).json({ error: 'Failed to create event' });
@@ -461,8 +466,8 @@ export function createEventsRouter(ctx: AppContext) {
           limit: 100,
         });
         const dupes = existing.data.records.filter((r) => {
-          const subjectUri = (r.value as { subject?: { uri?: string } })?.subject
-            ?.uri;
+          const subjectUri = (r.value as { subject?: { uri?: string } })
+            ?.subject?.uri;
           return subjectUri === parsed.data.subject.uri;
         });
         for (const d of dupes) {
@@ -484,9 +489,11 @@ export function createEventsRouter(ctx: AppContext) {
           collection: RSVP_COLLECTION,
           record: record as Record<string, unknown>,
         });
-        return res
-          .status(201)
-          .json({ uri: response.data.uri, cid: response.data.cid, value: record });
+        return res.status(201).json({
+          uri: response.data.uri,
+          cid: response.data.cid,
+          value: record,
+        });
       } catch (err) {
         ctx.logger.error({ err }, 'create rsvp failed');
         return res.status(500).json({ error: 'Failed to create RSVP' });

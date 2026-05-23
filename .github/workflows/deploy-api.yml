@@ -1,0 +1,38 @@
+name: Deploy API
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'api/**'
+      - 'lexicons/**'
+      - '.github/workflows/deploy-api.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-api
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: SSH to droplet and redeploy
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            set -euo pipefail
+            cd /home/appuser/crate
+            git fetch --prune origin main
+            git reset --hard origin/main
+            cd api
+            npm ci
+            npm run build
+            npm prune --omit=dev
+            sudo /bin/systemctl restart crate-api
+            sleep 2
+            sudo /bin/systemctl is-active --quiet crate-api
+            echo "Deployed $(git -C .. rev-parse --short HEAD)"

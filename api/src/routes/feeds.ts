@@ -149,9 +149,11 @@ export function createFeedsRouter(ctx: AppContext) {
           collection: COLLECTION,
           record: record as Record<string, unknown>,
         });
-        return res
-          .status(201)
-          .json({ uri: response.data.uri, cid: response.data.cid, value: record });
+        return res.status(201).json({
+          uri: response.data.uri,
+          cid: response.data.cid,
+          value: record,
+        });
       } catch (err) {
         ctx.logger.error({ err }, 'create feed failed');
         return res.status(500).json({ error: 'Failed to create feed' });

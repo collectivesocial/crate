@@ -33,4 +33,3 @@ export function isRecordNotFoundError(err: unknown): boolean {
   if (e.status === 400 && e.error === 'RecordNotFound') return true;
   return false;
 }
-
