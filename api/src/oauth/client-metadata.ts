@@ -49,6 +49,8 @@ export const CRATE_SCOPES = [
   'blob:image/webp',
   'blob:image/gif',
   'blob:image/svg+xml',
+  // Profile reads via PDS proxy (avoids relying solely on public AppView)
+  'rpc:app.bsky.actor.getProfile',
 ].join(' ');
 
 /**
