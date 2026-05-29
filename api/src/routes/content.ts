@@ -33,10 +33,25 @@ const kindSchema = z.enum([
 
 // Mirrors the `BlobRef` JSON shape the AT Protocol uses on the wire. We let
 // the lexicon validator do the real checking; this just keeps zod happy.
+//
+// The `ref` can arrive in three forms depending on which `@atproto` version
+// serialized it on the way out of our GET endpoint:
+//   - `{ $link: cid }`  — the lex-JSON link form (newer @atproto)
+//   - `{ "/": cid }`    — the IPLD/DAG-JSON link form (older @atproto)
+//   - `cid` (string)    — a bare CID
+// We accept all three so a record loaded from the PDS can be saved back
+// unchanged. Without the `{ "/": cid }` case, re-saving any record that
+// already has a cover image fails zod with a bare "Invalid input" on `image`.
 const blobRefSchema = z
   .object({
     $type: z.literal('blob').optional(),
-    ref: z.union([z.object({ $link: z.string() }), z.string()]).optional(),
+    ref: z
+      .union([
+        z.object({ $link: z.string() }),
+        z.object({ '/': z.string() }),
+        z.string(),
+      ])
+      .optional(),
     mimeType: z.string().optional(),
     size: z.number().optional(),
     cid: z.string().optional(),
@@ -96,20 +111,28 @@ function hydrateBlobRef(raw: unknown): BlobRef | null {
       size?: unknown;
     };
 
-    // Modern typed JSON blob ref.
+    // Typed JSON blob ref. The CID lives under `ref`, which may be the
+    // lex-JSON `{ $link }` form, the IPLD `{ "/" }` form, or a bare string
+    // depending on which @atproto version serialized it. Accept all three so
+    // a blob loaded from the PDS round-trips back unchanged.
     if (
       obj.$type === 'blob' &&
-      obj.ref &&
-      typeof obj.ref === 'object' &&
-      typeof (obj.ref as { $link?: unknown }).$link === 'string' &&
       typeof obj.mimeType === 'string' &&
       typeof obj.size === 'number'
     ) {
-      try {
-        const cid = CID.parse((obj.ref as { $link: string }).$link);
-        return new BlobRef(cid, obj.mimeType, obj.size);
-      } catch {
-        return null;
+      const cidStr =
+        typeof obj.ref === 'string'
+          ? obj.ref
+          : obj.ref && typeof obj.ref === 'object'
+            ? ((obj.ref as { $link?: unknown })['$link'] ??
+              (obj.ref as Record<string, unknown>)['/'])
+            : undefined;
+      if (typeof cidStr === 'string') {
+        try {
+          return new BlobRef(CID.parse(cidStr), obj.mimeType, obj.size);
+        } catch {
+          return null;
+        }
       }
     }
   }
