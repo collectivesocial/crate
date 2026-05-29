@@ -9,7 +9,7 @@ import express, { Request, Response } from 'express';
 import { CID } from 'multiformats/cid';
 import { z } from 'zod';
 import type { AppContext } from '../context';
-import { handler, isRecordNotFoundError } from '../lib/http';
+import { handler, isRecordNotFoundError, zodErrorDetails } from '../lib/http';
 import { validateMain } from '../lexicon/types/social/crate/content';
 import { getSessionAgent } from '../oauth/session';
 
@@ -255,9 +255,9 @@ export function createContentRouter(ctx: AppContext) {
 
       const parsed = contentInputSchema.safeParse(req.body);
       if (!parsed.success) {
-        return res
-          .status(400)
-          .json({ error: 'Invalid content', details: parsed.error.flatten() });
+        const details = zodErrorDetails(parsed.error);
+        ctx.logger.warn({ details }, 'create content rejected: invalid input');
+        return res.status(400).json({ error: 'Invalid content', details });
       }
 
       const now = new Date().toISOString();
@@ -308,9 +308,12 @@ export function createContentRouter(ctx: AppContext) {
 
       const parsed = contentInputSchema.safeParse(req.body);
       if (!parsed.success) {
-        return res
-          .status(400)
-          .json({ error: 'Invalid content', details: parsed.error.flatten() });
+        const details = zodErrorDetails(parsed.error);
+        ctx.logger.warn(
+          { details, rkey: rkeyResult.data },
+          'update content rejected: invalid input'
+        );
+        return res.status(400).json({ error: 'Invalid content', details });
       }
 
       // Preserve original createdAt / publishedAt if the record already exists.

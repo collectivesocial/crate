@@ -1,4 +1,24 @@
 import type { Request, Response, NextFunction } from 'express';
+import type { ZodError } from 'zod';
+
+/**
+ * Render a `ZodError` as a short, human-readable string keyed by field path,
+ * e.g. `bskyPostRef.cid: expected string, received undefined; title: required`.
+ *
+ * The route handlers previously returned `error.flatten()` (an object) as the
+ * `details` field. The web client formats errors as `${error}: ${details}`,
+ * so an object stringified to the useless `"[object Object]"`, hiding which
+ * field actually failed. Returning a string keeps `details` informative on
+ * the wire and in logs.
+ */
+export function zodErrorDetails(err: ZodError): string {
+  return err.issues
+    .map((issue) => {
+      const path = issue.path.join('.');
+      return path ? `${path}: ${issue.message}` : issue.message;
+    })
+    .join('; ');
+}
 
 export type Handler = (
   req: Request,
