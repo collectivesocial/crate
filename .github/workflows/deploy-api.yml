@@ -26,6 +26,10 @@ jobs:
           script: |
             set -euo pipefail
             cd /home/appuser/crate
+            # The repo is owned by appuser but the deploy SSHes in as a
+            # different user, which trips git's "dubious ownership" guard
+            # (git >= 2.35.2). Mark the checkout as safe for whoever runs this.
+            git config --global --add safe.directory /home/appuser/crate
             git fetch --prune origin main
             git reset --hard origin/main
             cd api
